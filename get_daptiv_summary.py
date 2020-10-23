@@ -1,5 +1,6 @@
 """Read Time log and print summary on stdout."""
 import datetime as dt
+import os
 import re
 
 import fire
@@ -33,7 +34,10 @@ def get_total_hours(month, day, filename=None):
     """Return total hours and print subtotals."""
     if not filename:
         filename = f'{LOG_PATH}log{month}_{day}.txt'
-
+    # Check existence of file
+    if not os.path.isfile(filename):
+        print(f'File:\n"{filename}"\ndoes not exist.')
+        return
     # Open the log file, read only
     with open(filename, 'r') as log:
         total = dt.timedelta(0, 0, 0)
