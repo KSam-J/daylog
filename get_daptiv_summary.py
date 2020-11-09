@@ -34,7 +34,7 @@ PRINT_DESCRIPTION = 0
 def get_total_hours(month, day, filename=None):
     """Return total hours and print subtotals."""
     if not filename:
-        filename = f'{LOG_PATH}log{month}_{day}.txt'
+        filename = f'{LOG_PATH}log{month:02}_{day:02}.txt'
     # Check existence of file
     if not os.path.isfile(filename):
         print(f'File:\n"{filename}"\ndoes not exist.')
