@@ -77,7 +77,14 @@ def get_total_hours(month, day, filename=None):
         # Convert seconds to hours
         total_hrs = total.total_seconds()/3600
 
-    return f'{str(total):>32}'
+    return f'{total_hrs:>32} hours'
+    # TODO add flag to convert to work day scale
+    # \nOR {(total_hrs)//8} work_days and {total_hrs % 8} hours'
+
+# parser = argparse.ArgumentParser()
+# parser.add_argument("echo")
+# args = parser.parse_args()
+# print(args.echo)
 
 
 if __name__ == '__main__':
