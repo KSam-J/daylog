@@ -8,6 +8,7 @@ import fire
 # FILENAME = f'log'
 LOG_PATH = '/home/samkel/journal/oct_time_sheet/'
 
+PRINT_DESCRIPTION = 0
 
 # def printSummary(day, month=dt.date.today().month, filename=''):
 #     with file(f'{LOG_PATH}log{month}_{day}.txt') as log:
@@ -70,6 +71,11 @@ def get_total_hours(month, day, filename=None):
 
                 # Accumulate the total hours
                 total += tdelta
+            elif PRINT_DESCRIPTION:  # TODO Turn this into a parser flag
+                # Print None Time delta lines
+                print(line.rstrip())
+        # Convert seconds to hours
+        total_hrs = total.total_seconds()/3600
 
     return f'{str(total):>32}'
 
