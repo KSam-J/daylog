@@ -54,9 +54,12 @@ def get_total_hours(month, day, filename=None):
 
                 # Accumulate the total hours
                 total += tdelta
+
             elif args.verbose >= 1:
-                # Print None Time delta lines
-                print(line.rstrip())
+                # Print Non-timedelta lines
+                if not re.search(r'Total:|^\n', line):
+                    print(line.rstrip())
+
         # Convert seconds to hours
         total_hrs = total.total_seconds()/3600
 
