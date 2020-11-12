@@ -8,18 +8,27 @@ import re
 import fire
 
 # FILENAME = f'log'
-LOG_PATH = '/home/samkel/journal/oct_time_sheet/'
+LOG_PATH = '/home/samkel/journal'
 
 PRINT_DESCRIPTION = 0
+
+FOLDER_SUFFIX = '_time_sheet'
+
+
+def error_handler(error_str):
+    print(error_str)
+    exit(1)
 
 
 def get_total_hours(month, day, filename=None):
     """Return total hours and print subtotals."""
+    today = dt.date.today()
+
     if not filename:
-        filename = f'{LOG_PATH}log{month:02}_{day:02}.txt'
+        filename = f'{LOG_PATH}/{today.strftime("%b")}{FOLDER_SUFFIX}/log{month:02}_{day:02}.txt'
     # Check existence of file
     if not os.path.isfile(filename):
-        print(f'File:\n"{filename}"\ndoes not exist.')
+        error_handler(f'File: "{filename}" does not exist.')
         return
     # Open the log file, read only
     with open(filename, 'r') as log:
@@ -55,10 +64,11 @@ def get_total_hours(month, day, filename=None):
                 # Accumulate the total hours
                 total += tdelta
 
-            elif args.verbose >= 1:
-                # Print Non-timedelta lines
-                if not re.search(r'Total:|^\n', line):
-                    print(line.rstrip())
+            else:  # Description lines
+                if args.verbose >= 1:
+                    # Print Non-timedelta lines
+                    if not re.search(r'Total:|^\n', line):
+                        print(line.rstrip())
 
         # Convert seconds to hours
         total_hrs = total.total_seconds()/3600
