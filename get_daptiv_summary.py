@@ -87,19 +87,20 @@ if __name__ == '__main__':
               '  or:  %(prog)s MONTH DAY')
 
     parser.add_argument(
-        "file_or_month", help='numeral of month OR name of logfile')
+        "file_or_month", help='numeral of month OR name of logfile', nargs='?')
     parser.add_argument(
         "day", help='numeral of day IF with month', type=int, nargs='?')
 
     parser.add_argument('-v', '--verbose', action='count', default=0,
                         help='show additional hourly info')
 
-    # parser.add_argument("--filename", help="explicit logfile name for analysis")
-
     args = parser.parse_args()
     today = dt.date.today()
 
-    if os.path.isfile(args.file_or_month):
+    if args.file_or_month is None:
+        total_str = generate_summary(beget_filepath(
+            today.year, today.month, today.day))
+    elif os.path.isfile(args.file_or_month):
         # Read an explicitly defined file
         total_str = generate_summary(args.file_or_month)
     else:
