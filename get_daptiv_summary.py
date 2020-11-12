@@ -13,6 +13,7 @@ LOG_PATH = '/home/samkel/journal'
 PRINT_DESCRIPTION = 0
 
 FOLDER_SUFFIX = '_time_sheet'
+DUMMY_DATE = (1986, 2, 21)
 
 
 def error_handler(error_str):
@@ -20,12 +21,14 @@ def error_handler(error_str):
     exit(1)
 
 
-def get_total_hours(month, day, filename=None):
-    """Return total hours and print subtotals."""
-    today = dt.date.today()
+def beget_filepath(year, month, day):
+    """Return full filepath of log file for select date."""
+    date = dt.datetime(year, month, day)
 
-    if not filename:
-        filename = f'{LOG_PATH}/{today.strftime("%b")}{FOLDER_SUFFIX}/log{month:02}_{day:02}.txt'
+    return f'{LOG_PATH}/{date.strftime("%b")}{FOLDER_SUFFIX}/log{month:02}_{day:02}.txt'
+
+
+def generate_summary(filename):
     # Check existence of file
     if not os.path.isfile(filename):
         error_handler(f'File: "{filename}" does not exist.')
@@ -44,14 +47,13 @@ def get_total_hours(month, day, filename=None):
                 min1 = 0
                 if hour_search.group(2):
                     min1 = int(hour_search.group(2))
-                start_time = dt.datetime(2020, month, day, hour1, min1)
-
+                start_time = dt.datetime(*DUMMY_DATE, hour1, min1)
                 # Grab end time
                 hour2 = int(hour_search.group(3))
                 min2 = 0
                 if hour_search.group(4) is not None:
                     min2 = int(hour_search.group(4))
-                end_time = dt.datetime(2020, month, day, hour2, min2)
+                end_time = dt.datetime(*DUMMY_DATE, hour2, min2)
 
                 # Calculate and print Time Delta
                 tdelta = end_time - start_time
@@ -95,12 +97,15 @@ if __name__ == '__main__':
     # parser.add_argument("--filename", help="explicit logfile name for analysis")
 
     args = parser.parse_args()
+    today = dt.date.today()
 
     if os.path.isfile(args.file_or_month):
         # Read an explicitly defined file
-        total_str = get_total_hours(5, 5, filename=args.file_or_month)
+        total_str = generate_summary(args.file_or_month)
     else:
         # Default behavior, use month and day to determine filename
-        total_str = get_total_hours(int(args.file_or_month), args.day)
+        args.file_or_month = int(args.file_or_month)
+        total_str = generate_summary(beget_filepath(
+            today.year, args.file_or_month, args.day))
 
     print(total_str)
