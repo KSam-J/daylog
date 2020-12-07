@@ -7,25 +7,9 @@ import re
 
 import fire
 
-# FILENAME = f'log'
-LOG_PATH = '/home/samkel/journal'
+from util import beget_filepath, error_handler
 
-PRINT_DESCRIPTION = 0
-
-FOLDER_SUFFIX = '_time_sheet'
 DUMMY_DATE = (1986, 2, 21)
-
-
-def error_handler(error_str):
-    print(error_str)
-    exit(1)
-
-
-def beget_filepath(year, month, day):
-    """Return full filepath of log file for select date."""
-    date = dt.datetime(year, month, day)
-
-    return f'{LOG_PATH}/{date.strftime("%b")}{FOLDER_SUFFIX}/log{month:02}_{day:02}.txt'
 
 
 def generate_summary(filename):
