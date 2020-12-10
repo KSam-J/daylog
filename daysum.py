@@ -5,11 +5,14 @@ import datetime as dt
 import os
 import re
 
-import fire
-
 from util import beget_filepath, error_handler
 
 DUMMY_DATE = (1986, 2, 21)
+
+
+def print_delta_line(hr1, min1, hr2, min2, delta):
+    """Pretty print the time delta line."""
+    print(f'{hr1:02}:{min1:02}-{hr2:02}:{min2:02}\t\t\u0394{delta}')
 
 
 def generate_summary(filename):
@@ -45,7 +48,7 @@ def generate_summary(filename):
                     # Make all timedeltas be < 12 hours.
                     tdelta = dt.timedelta(
                         days=0, seconds=(tdelta.seconds - 60*60*12))
-                print(f'{hour1:02}:{min1:02}-{hour2:02}:{min2:02}\t\t\u0394{tdelta}')
+                print_delta_line(hour1, min1, hour2, min2, tdelta)
 
                 # Accumulate the total hours
                 total += tdelta
