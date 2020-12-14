@@ -1,16 +1,15 @@
+"""Allow access and creation of text log files."""
 import argparse
 import datetime as dt
 import os
 import subprocess
 
-from util import LOG_PATH, beget_filepath, beget_path_and_file
+from util import beget_path_and_file
 
-
-def ensure_path(path):
-    os.makedirs(path, exist_ok=True)
 
 def edit_timesheet(filename):
-    subprocess.run(['vim', filename])
+    """Call vim and edit a log file."""
+    subprocess.run(['vim', filename], check=True)
 
 
 if __name__ == '__main__':
@@ -20,7 +19,7 @@ if __name__ == '__main__':
               '  or:  %(prog)s MONTH DAY')
 
     parser.add_argument(
-        "file_or_month", help='numeral of month OR name of logfile', nargs='?')
+        "month", help='numeral of month OR name of logfile', nargs='?')
     parser.add_argument(
         "day", help='numeral of day IF with month', type=int, nargs='?')
 
@@ -30,18 +29,22 @@ if __name__ == '__main__':
     args = parser.parse_args()
     today = dt.date.today()
 
-    if args.file_or_month is None:
+    if args.month is None:
         logpath, logname = beget_path_and_file(
             today.year, today.month, today.day)
-        ensure_path(logpath)
+
+        # Create the path to the log file if it does not already exist
+        os.makedirs(logpath, exist_ok=True)
+
         edit_timesheet(f'{logpath}{logname}')
-    # elif os.path.isfile(args.file_or_month):
-    #     # Read an explicitly defined file
-    #     total_str = generate_summary(args.file_or_month)
+
     else:
         # Default behavior, use month and day to determine filename
-        args.file_or_month = int(args.file_or_month)
+        args.month = int(args.fmonth)
         logpath, logname = beget_path_and_file(
-            today.year, args.file_or_month, args.day)
-        ensure_path(logpath)
+            today.year, args.month, args.day)
+
+        # Create the path to the log file if it does not already exist
+        os.makedirs(logpath, exist_ok=True)
+
         edit_timesheet(f'{logpath}{logname}')
