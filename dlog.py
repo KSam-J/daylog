@@ -7,12 +7,13 @@ import subprocess
 from util import beget_path_and_file
 
 
-def edit_timesheet(filename):
+def edit_timesheet(filename: os.PathLike = None):
     """Call vim and edit a log file."""
     subprocess.run(['vim', filename], check=True)
 
 
-if __name__ == '__main__':
+def driver():
+    """Manage the argparse and drive the program."""
     parser = argparse.ArgumentParser(
         prog='dlog',
         usage='%(prog)s FILENAME\n'
@@ -48,3 +49,7 @@ if __name__ == '__main__':
         os.makedirs(logpath, exist_ok=True)
 
         edit_timesheet(f'{logpath}{logname}')
+
+
+if __name__ == '__main__':
+    driver()
