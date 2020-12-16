@@ -48,7 +48,8 @@ def generate_summary(filename):
                     # Make all timedeltas be < 12 hours.
                     tdelta = dt.timedelta(
                         days=0, seconds=(tdelta.seconds - 60*60*12))
-                print_delta_line(hour1, min1, hour2, min2, tdelta)
+                if args.quiet == 0:
+                    print_delta_line(hour1, min1, hour2, min2, tdelta)
 
                 # Accumulate the total hours
                 total += tdelta
@@ -80,6 +81,8 @@ if __name__ == '__main__':
 
     parser.add_argument('-v', '--verbose', action='count', default=0,
                         help='show additional hourly info')
+    parser.add_argument('-q', '--quiet', action='count', default=0,
+                        help='only show total hours')
 
     args = parser.parse_args()
     today = dt.date.today()
