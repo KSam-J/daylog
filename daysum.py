@@ -10,6 +10,50 @@ from util import beget_filepath, error_handler
 DUMMY_DATE = (1986, 2, 21)
 
 
+class TimeBlip():
+    """A single timedelta of work with metadata."""
+
+    def __init__(self, start, stop, desc, tag=None):
+        """Populate essential timedelta and metadata."""
+        self.start = start
+        self.stop = stop
+        self.desc = desc
+        self.tag = tag
+
+    @property
+    def tdelta(self):
+        """Return the calculated stop - start time."""
+        return self.stop - self.start
+
+    @staticmethod
+    def strip_tag(desc):
+        """Extract the tag info from a description string."""
+        pass
+
+
+class TimeBlob():
+    """A loosely correlated group of TimeBlips."""
+
+    def __init__(self):
+        """Create an empty list for holding TimeBlips."""
+        self.blip_list = list(TimeBlip)
+
+    @property
+    def blob_total(self):
+        """Calculate the total of all blips."""
+        blob_sum = 0
+        for blip in self.blip_list:
+            blob_sum += blip.tdelta
+
+    def print_total(self):
+        """Print the grand total to stdout."""
+        pass
+
+    def print_tag_totals(self):
+        """Print the totals of each tag."""
+        pass
+
+
 def print_delta_line(hr1, min1, hr2, min2, delta):
     """Pretty print the time delta line."""
     print(f'{hr1:02}:{min1:02}-{hr2:02}:{min2:02}\t\t\u0394{delta}')
