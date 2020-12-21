@@ -60,10 +60,11 @@ def print_delta_line(hr1, min1, hr2, min2, delta):
 
 
 def generate_summary(filename):
+    """Read a logfile and generate a summary of the time log."""
     # Check existence of file
     if not os.path.isfile(filename):
         error_handler(f'File: "{filename}" does not exist.')
-        return
+        return None
     # Open the log file, read only
     with open(filename, 'r') as log:
         total = dt.timedelta(0, 0, 0)
