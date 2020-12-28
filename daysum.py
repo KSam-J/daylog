@@ -203,6 +203,28 @@ def generate_summary(filename):
     # \nOR {(total_hrs)//8} work_days and {total_hrs % 8} hours'
 
 
+def weekly_report(date_contained: dt.date):
+    """Generate and display the weekly report."""
+    # Get the week and year in question
+    year_iq, week_iq, _ = date_contained.isocalendar()
+
+    # Determine the dates contained by the week in question
+    date_list = list()
+    for weekday in range(1, 8):
+        date_in_week = dt.date.fromisocalendar(year_iq, week_iq, weekday)
+        print(date_in_week)
+        date_list.append(
+            (date_in_week.year, date_in_week.month, date_in_week.day))
+
+    week_blob = TimeBlob()
+    for date in date_list:
+        gen_sum_with_blob(beget_filepath(*date), week_blob)
+
+    total_hrs = week_blob.blob_total.total_seconds()/3600
+
+    return f'{total_hrs:>32} hours'
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         prog='daysum',
