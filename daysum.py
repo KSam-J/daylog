@@ -244,28 +244,29 @@ if __name__ == '__main__':
                         help='count using the blob data format')
     parser.add_argument('-t', '--tag_sort', action='store_true',
                         help='display timedeltas organized by tag')
+    parser.add_argument('-w', '--week', action='store_true',
+                        help='display the weekly report')
 
     args = parser.parse_args()
     today = dt.date.today()
 
+    # Determine the argument types for the gen_sum function
+    gen_args = list()
     if args.file_or_month is None:
-        if args.experimental:
-            total_str = gen_sum_with_blob(beget_filepath(
-                today.year, today.month, today.day))
-        else:
-            total_str = generate_summary(beget_filepath(
-                today.year, today.month, today.day))
+        gen_args = [today.year, args.file_or_month, args.day]
     elif os.path.isfile(args.file_or_month):
         # Read an explicitly defined file
-        total_str = generate_summary(args.file_or_month)
+        gen_args.append(args.file_or_month)
     else:
         # Default behavior, use month and day to determine filename
         args.file_or_month = int(args.file_or_month)
-        if args.experimental:
-            total_str = gen_sum_with_blob(beget_filepath(
-                today.year, args.file_or_month, args.day))
-        else:
-            total_str = generate_summary(beget_filepath(
-                today.year, args.file_or_month, args.day))
+        gen_args = [today.year, args.file_or_month, args.day]
+
+    if args.experimental:
+        total_str = gen_sum_with_blob(beget_filepath(*gen_args))
+    elif args.week:
+        total_str = weekly_report(dt.date(*gen_args))
+    else:
+        total_str = generate_summary(beget_filepath(*gen_args))
 
     print(total_str)
