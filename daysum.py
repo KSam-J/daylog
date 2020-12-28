@@ -90,14 +90,16 @@ def print_delta_line(hr1, min1, hr2, min2, delta):
     print(f'{hr1:02}:{min1:02}-{hr2:02}:{min2:02}\t\t\u0394{delta}')
 
 
-def gen_sum_with_blob(filename):
+def gen_sum_with_blob(filename, blob: TimeBlob = None):
     """Read a logfile and generate a summary of the time log."""
     # Check existence of file
     if not os.path.isfile(filename):
         error_handler(f'File: "{filename}" does not exist.')
         return None
 
-    blob = TimeBlob()
+    if blob is None:
+        blob = TimeBlob()
+
     # Begin transfering text info to TimeBlob data stucture
     with open(filename, 'r') as log:
         purgatory_blip = None
@@ -140,7 +142,7 @@ def gen_sum_with_blob(filename):
                         if not re.search(r'Total:|^\n', line):
                             print(line.rstrip())
 
-        if args.tag_sort:
+        if args.quiet == 0 and args.tag_sort:
             blob.print_tag_totals()
         # Convert seconds to hours
         total_hrs = blob.blob_total.total_seconds()/3600
