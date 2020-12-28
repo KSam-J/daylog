@@ -77,11 +77,12 @@ class TimeBlob():
     def print_tag_totals(self):
         """Print the totals of each tag."""
         for tag in self.tag_set:
-            print(tag)
-            tag_total = 0
+            print(f'{tag:8}', end='')
+            tag_total = dt.timedelta()
             for blip in self.blip_list:
                 if blip.tag == tag:
                     tag_total += blip.tdelta
+            print(f'        {tag_total}')
 
 
 def print_delta_line(hr1, min1, hr2, min2, delta):
@@ -122,14 +123,14 @@ def gen_sum_with_blob(filename):
                 purgatory_blip = TimeBlip(start_time, end_time)
 
                 # Calculate and print Time Delta
-                if args.quiet == 0:
+                if args.quiet == 0 and not args.tag_sort:
                     print_delta_line(hour1, min1, hour2, min2,
                                      purgatory_blip.tdelta)
 
             else:  # Description lines
                 if isinstance(purgatory_blip, TimeBlip):
                     purgatory_blip.desc = line.strip()
-                    purgatory_blip.tag = TimeBlip.strip_tag(line.strip())
+                    purgatory_blip.set_tag(TimeBlip.strip_tag(line.strip()))
 
                     # Add the Blip to the Blob
                     blob.add_blip(purgatory_blip)
@@ -139,6 +140,8 @@ def gen_sum_with_blob(filename):
                         if not re.search(r'Total:|^\n', line):
                             print(line.rstrip())
 
+        if args.tag_sort:
+            blob.print_tag_totals()
         # Convert seconds to hours
         total_hrs = blob.blob_total.total_seconds()/3600
 
@@ -215,6 +218,8 @@ if __name__ == '__main__':
                         help='only show total hours')
     parser.add_argument('-x', '--experimental', action='store_true',
                         help='count using the blob data format')
+    parser.add_argument('-t', '--tag_sort', action='store_true',
+                        help='display timedeltas organized by tag')
 
     args = parser.parse_args()
     today = dt.date.today()
