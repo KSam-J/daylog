@@ -41,7 +41,7 @@ def driver():
 
     else:
         # Default behavior, use month and day to determine filename
-        args.month = int(args.fmonth)
+        args.month = int(args.month)
         logpath, logname = beget_path_and_file(
             today.year, args.month, args.day)
 
