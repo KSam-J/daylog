@@ -13,7 +13,6 @@ FOLDER_SUFFIX = '_time_sheet'
 def error_handler(error_str):
     """Print error info to screen and exit the program."""
     print(error_str)
-    sys.exit(1)
 
 
 def beget_path_and_file(year, month, day):
