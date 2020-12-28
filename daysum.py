@@ -85,6 +85,62 @@ def print_delta_line(hr1, min1, hr2, min2, delta):
     print(f'{hr1:02}:{min1:02}-{hr2:02}:{min2:02}\t\t\u0394{delta}')
 
 
+def gen_sum_with_blob(filename):
+    """Read a logfile and generate a summary of the time log."""
+    # Check existence of file
+    if not os.path.isfile(filename):
+        error_handler(f'File: "{filename}" does not exist.')
+        return None
+
+    blob = TimeBlob()
+    # Begin transfering text info to TimeBlob data stucture
+    with open(filename, 'r') as log:
+        purgatory_blip = None
+
+        for line in log:
+            hour_search = re.match(TIME_ENTRY_RE, line)
+
+            # On lines stating time deltas
+            if hour_search:
+                # Grab start time
+                hour1 = int(hour_search.group(1))
+                min1 = 0
+                if hour_search.group(2):
+                    min1 = int(hour_search.group(2))
+                start_time = dt.datetime(*DUMMY_DATE, hour1, min1)
+                # Grab end time
+                hour2 = int(hour_search.group(3))
+                min2 = 0
+                if hour_search.group(4) is not None:
+                    min2 = int(hour_search.group(4))
+                end_time = dt.datetime(*DUMMY_DATE, hour2, min2)
+
+                purgatory_blip = TimeBlip(start_time, end_time)
+
+                # Calculate and print Time Delta
+                if args.quiet == 0:
+                    print_delta_line(hour1, min1, hour2, min2,
+                                     purgatory_blip.tdelta)
+
+            else:  # Description lines
+                if isinstance(purgatory_blip, TimeBlip):
+                    purgatory_blip.desc = line.strip()
+                    purgatory_blip.tag = TimeBlip.strip_tag(line.strip())
+
+                    # Add the Blip to the Blob
+                    blob.add_blip(purgatory_blip)
+                    purgatory_blip = None
+                    if args.verbose >= 1:
+                        # Print Non-timedelta lines
+                        if not re.search(r'Total:|^\n', line):
+                            print(line.rstrip())
+
+        # Convert seconds to hours
+        total_hrs = blob.blob_total.total_seconds()/3600
+
+    return f'{total_hrs:>32} hours'
+
+
 def generate_summary(filename):
     """Read a logfile and generate a summary of the time log."""
     # Check existence of file
