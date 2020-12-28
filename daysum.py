@@ -38,10 +38,14 @@ class TimeBlip():
 
         return tdelta
 
+    def set_tag(self, tag):
+        """Set the tag value."""
+        self.tag = tag
+
     @staticmethod
     def strip_tag(desc):
         """Extract the tag info from a description string."""
-        return re.search(STRIP_TAG_RE, desc)
+        return re.search(STRIP_TAG_RE, desc).group(0)
 
 
 class TimeBlob():
