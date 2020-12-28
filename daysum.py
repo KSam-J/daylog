@@ -209,20 +209,30 @@ if __name__ == '__main__':
                         help='show additional hourly info')
     parser.add_argument('-q', '--quiet', action='count', default=0,
                         help='only show total hours')
+    parser.add_argument('-x', '--experimental', action='store_true',
+                        help='count using the blob data format')
 
     args = parser.parse_args()
     today = dt.date.today()
 
     if args.file_or_month is None:
-        total_str = generate_summary(beget_filepath(
-            today.year, today.month, today.day))
+        if args.experimental:
+            total_str = gen_sum_with_blob(beget_filepath(
+                today.year, today.month, today.day))
+        else:
+            total_str = generate_summary(beget_filepath(
+                today.year, today.month, today.day))
     elif os.path.isfile(args.file_or_month):
         # Read an explicitly defined file
         total_str = generate_summary(args.file_or_month)
     else:
         # Default behavior, use month and day to determine filename
         args.file_or_month = int(args.file_or_month)
-        total_str = generate_summary(beget_filepath(
-            today.year, args.file_or_month, args.day))
+        if args.experimental:
+            total_str = gen_sum_with_blob(beget_filepath(
+                today.year, args.file_or_month, args.day))
+        else:
+            total_str = generate_summary(beget_filepath(
+                today.year, args.file_or_month, args.day))
 
     print(total_str)
