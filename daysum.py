@@ -8,27 +8,40 @@ import re
 from util import beget_filepath, error_handler
 
 DUMMY_DATE = (1986, 2, 21)
+TIME_ENTRY_RE = re.compile(r'(\d{1,2}):?(\d{1,2})?-(\d{1,2}):?(\d{1,2})?')
+STRIP_TAG_RE = re.compile(r'(\w*)')
 
 
 class TimeBlip():
     """A single timedelta of work with metadata."""
 
-    def __init__(self, start, stop, desc, tag=None):
+    def __init__(self,
+                 start: dt.datetime,
+                 stop: dt.datetime,
+                 desc: str = None,
+                 tag: list() = None):
         """Populate essential timedelta and metadata."""
         self.start = start
         self.stop = stop
         self.desc = desc
         self.tag = tag
+        self.dummy = False
 
     @property
-    def tdelta(self):
+    def tdelta(self) -> dt.timedelta:
         """Return the calculated stop - start time."""
-        return self.stop - self.start
+        tdelta = self.stop - self.start
+        if tdelta.days < 0:
+            # Make all timedeltas be < 12 hours.
+            tdelta = dt.timedelta(
+                days=0, seconds=(tdelta.seconds - 60*60*12))
+
+        return tdelta
 
     @staticmethod
     def strip_tag(desc):
         """Extract the tag info from a description string."""
-        pass
+        return re.search(STRIP_TAG_RE, desc)
 
 
 class TimeBlob():
@@ -36,22 +49,35 @@ class TimeBlob():
 
     def __init__(self):
         """Create an empty list for holding TimeBlips."""
-        self.blip_list = list(TimeBlip)
+        self.blip_list = list()
+        self.tag_set = set()
 
     @property
     def blob_total(self):
         """Calculate the total of all blips."""
-        blob_sum = 0
+        blob_sum = dt.timedelta()
         for blip in self.blip_list:
             blob_sum += blip.tdelta
 
+        return blob_sum
+
+    def add_blip(self, blip: TimeBlip):
+        """Add the blip to the list and perform accounting actions."""
+        self.tag_set.add(blip.tag)
+        self.blip_list.append(blip)
+
     def print_total(self):
         """Print the grand total to stdout."""
-        pass
+        print(self.blob_total)
 
     def print_tag_totals(self):
         """Print the totals of each tag."""
-        pass
+        for tag in self.tag_set:
+            print(tag)
+            tag_total = 0
+            for blip in self.blip_list:
+                if blip.tag == tag:
+                    tag_total += blip.tdelta
 
 
 def print_delta_line(hr1, min1, hr2, min2, delta):
@@ -69,8 +95,7 @@ def generate_summary(filename):
     with open(filename, 'r') as log:
         total = dt.timedelta(0, 0, 0)
         for line in log:
-            hour_search = re.search(
-                r'(\d{1,2}):?(\d{1,2})?-(\d{1,2}):?(\d{1,2})?', line)
+            hour_search = re.search(TIME_ENTRY_RE, line)
 
             # On lines stating time deltas
             if hour_search:
