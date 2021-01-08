@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 """Allow access and creation of text log files."""
 import argparse
 import datetime as dt
