@@ -90,7 +90,11 @@ def print_delta_line(hr1, min1, hr2, min2, delta):
     print(f'{hr1:02}:{min1:02}-{hr2:02}:{min2:02}\t\t\u0394{delta}')
 
 
-def gen_sum_with_blob(filename, blob: TimeBlob = None):
+def gen_sum_with_blob(filename,
+                      blob: TimeBlob = None,
+                      quiet: int = 0,
+                      verbose: int = 0,
+                      tag_sum: bool = False):
     """Read a logfile and generate a summary of the time log."""
     # Check existence of file
     if not os.path.isfile(filename):
@@ -125,7 +129,7 @@ def gen_sum_with_blob(filename, blob: TimeBlob = None):
                 purgatory_blip = TimeBlip(start_time, end_time)
 
                 # Calculate and print Time Delta
-                if args.quiet == 0 and not args.tag_sort:
+                if quiet == 0:
                     print_delta_line(hour1, min1, hour2, min2,
                                      purgatory_blip.tdelta)
 
@@ -137,13 +141,13 @@ def gen_sum_with_blob(filename, blob: TimeBlob = None):
                     # Add the Blip to the Blob
                     blob.add_blip(purgatory_blip)
                     purgatory_blip = None
-                    if args.verbose >= 1:
+                    if verbose >= 1:
                         # Print Non-timedelta lines
                         if not re.search(r'Total:|^\n', line):
                             print(line.rstrip())
 
-        if args.quiet == 0 and args.tag_sort:
-            blob.print_tag_totals()
+    if tag_sum:
+        blob.print_tag_totals()
         # Convert seconds to hours
         total_hrs = blob.blob_total.total_seconds()/3600
 
@@ -225,7 +229,10 @@ def weekly_report(date_contained: dt.date):
     return f'{total_hrs:>32} hours'
 
 
-if __name__ == '__main__':
+def driver():
+    """Contain the arg parser and perform main functions."""
+    today = dt.date.today()
+
     parser = argparse.ArgumentParser(
         prog='daysum',
         usage='%(prog)s FILENAME\n'
@@ -248,7 +255,6 @@ if __name__ == '__main__':
                         help='display the weekly report')
 
     args = parser.parse_args()
-    today = dt.date.today()
 
     # Determine the argument types for the gen_sum function
     gen_args = list()
@@ -270,3 +276,7 @@ if __name__ == '__main__':
         total_str = generate_summary(beget_filepath(*gen_args))
 
     print(total_str)
+
+
+if __name__ == '__main__':
+    driver()
