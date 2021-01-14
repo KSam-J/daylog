@@ -9,7 +9,7 @@ from util import beget_filepath, error_handler
 
 DUMMY_DATE = (1986, 2, 21)
 TIME_ENTRY_RE = re.compile(r'(\d{1,2}):?(\d{1,2})?-(\d{1,2}):?(\d{1,2})?')
-STRIP_TAG_RE = re.compile(r'(\w*)')
+STRIP_TAG_RE = re.compile(r'[a-zA-Z_+]*')
 
 
 class TimeBlip():
@@ -83,12 +83,12 @@ class TimeBlob():
     def print_tag_totals(self):
         """Print the totals of each tag."""
         for tag in self.tag_set:
-            print(f'{tag:8}', end='')
+            print(f'{tag:>20}', end='')
             tag_total = dt.timedelta()
             for blip in self.blip_list:
                 if blip.tag == tag:
                     tag_total += blip.tdelta
-            print(f'        {tag_total}')
+            print(f'    {str(tag_total):>8}')
 
 
 def print_delta_line(hr1, min1, hr2, min2, delta):
@@ -100,7 +100,7 @@ def gen_sum_with_blob(filename,
                       blob: TimeBlob = None,
                       quiet: int = 0,
                       verbose: int = 0,
-                      tag_sum: bool = False):
+                      tag_summary: bool = False):
     """Read a logfile and generate a summary of the time log."""
     # Check existence of file
     if not os.path.isfile(filename):
@@ -152,10 +152,8 @@ def gen_sum_with_blob(filename,
                         if not re.search(r'Total:|^\n', line):
                             print(line.rstrip())
 
-    if tag_sum:
+    if tag_summary:
         blob.print_tag_totals()
-        # Convert seconds to hours
-        total_hrs = blob.blob_total.total_seconds()/3600
 
     return f'{total_hrs:>32} hours'
 
@@ -213,7 +211,9 @@ def generate_summary(filename):
     # \nOR {(total_hrs)//8} work_days and {total_hrs % 8} hours'
 
 
-def weekly_report(date_contained: dt.date):
+def weekly_report(date_contained: dt.date,
+                  tag_sort: bool = False,
+                  verbose: int = 0):
     """Generate and display the weekly report."""
     # Get the week and year in question
     year_iq, week_iq, _ = date_contained.isocalendar()
@@ -222,17 +222,25 @@ def weekly_report(date_contained: dt.date):
     date_list = list()
     for weekday in range(1, 8):
         date_in_week = dt.date.fromisocalendar(year_iq, week_iq, weekday)
-        print(date_in_week)
         date_list.append(
             (date_in_week.year, date_in_week.month, date_in_week.day))
 
     week_blob = TimeBlob()
+    # Place all dates in week into a single blob
     for date in date_list:
-        gen_sum_with_blob(beget_filepath(*date), week_blob)
+        # Only process files that exist
+        if not os.path.isfile(beget_filepath(*date)):
+            continue
+        # Deliniate each group of daily tags
+        print(dt.date(*date).strftime('%a %b %d %Y'))
 
-    total_hrs = week_blob.blob_total.total_seconds()/3600
+        gen_sum_with_blob(beget_filepath(*date),
+                          week_blob,
+                          quiet=1,
+                          tag_summary=tag_sort,
+                          verbose=verbose)
 
-    return f'{total_hrs:>32} hours'
+    return f'\nWeekly Total{str(week_blob.blob_total):>20}'
 
 
 def driver():
