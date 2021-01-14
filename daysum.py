@@ -155,7 +155,7 @@ def gen_sum_with_blob(filename,
     if tag_summary:
         blob.print_tag_totals()
 
-    return f'{total_hrs:>32} hours'
+    return blob
 
 
 def generate_summary(filename):
@@ -256,6 +256,11 @@ def driver():
         "file_or_month", help='numeral of month OR name of logfile', nargs='?')
     parser.add_argument(
         "day", help='numeral of day IF with month', type=int, nargs='?')
+    parser.add_argument("year",
+                        help='numeral of year',
+                        type=int,
+                        nargs='?',
+                        default=today.year)
 
     parser.add_argument('-v', '--verbose', action='count', default=0,
                         help='show additional hourly info')
@@ -273,21 +278,26 @@ def driver():
     # Determine the argument types for the gen_sum function
     gen_args = list()
     if args.file_or_month is None:
-        gen_args = [today.year, args.file_or_month, args.day]
+        gen_args = [today.year, today.month, today.day]
     elif os.path.isfile(args.file_or_month):
         # Read an explicitly defined file
         gen_args.append(args.file_or_month)
     else:
         # Default behavior, use month and day to determine filename
         args.file_or_month = int(args.file_or_month)
-        gen_args = [today.year, args.file_or_month, args.day]
+        gen_args = [args.year, args.file_or_month, args.day]
 
-    if args.experimental:
-        total_str = gen_sum_with_blob(beget_filepath(*gen_args))
-    elif args.week:
-        total_str = weekly_report(dt.date(*gen_args))
+    if not args.week:
+        q_val = 1 if args.quiet or args.tag_sort else 0
+        blob = gen_sum_with_blob(beget_filepath(*gen_args),
+                                 quiet=q_val,
+                                 verbose=args.verbose)
+        total_hrs = blob.blob_total.total_seconds()/3600
+        total_str = f'{total_hrs:>32} hours'
     else:
-        total_str = generate_summary(beget_filepath(*gen_args))
+        total_str = weekly_report(dt.date(*gen_args),
+                                  tag_sort=args.tag_sort,
+                                  verbose=args.verbose)
 
     print(total_str)
 
