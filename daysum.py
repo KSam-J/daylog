@@ -51,10 +51,10 @@ class TimeBlip():
 class TimeBlob():
     """A loosely correlated group of TimeBlips."""
 
-    def __init__(self):
+    def __init__(self, blip_list=None, tag_set=None):
         """Create an empty list for holding TimeBlips."""
-        self.blip_list = list()
-        self.tag_set = set()
+        self.blip_list = blip_list if blip_list else list()
+        self.tag_set = tag_set if tag_set else set()
 
     @property
     def blob_total(self):
@@ -64,6 +64,12 @@ class TimeBlob():
             blob_sum += blip.tdelta
 
         return blob_sum
+
+    def __add__(self, other_blob):
+        """Allow addition of Blobs."""
+        blips = self.blip_list + other_blob.blip_list
+        tags = self.tag_set.union(other_blob.tag_set)
+        return TimeBlob(blips, tags)
 
     def add_blip(self, blip: TimeBlip):
         """Add the blip to the list and perform accounting actions."""
