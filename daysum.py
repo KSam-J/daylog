@@ -158,59 +158,6 @@ def gen_sum_with_blob(filename,
     return blob
 
 
-def generate_summary(filename):
-    """Read a logfile and generate a summary of the time log."""
-    # Check existence of file
-    if not os.path.isfile(filename):
-        error_handler(f'File: "{filename}" does not exist.')
-        return None
-    # Open the log file, read only
-    with open(filename, 'r') as log:
-        total = dt.timedelta(0, 0, 0)
-        for line in log:
-            hour_search = re.search(TIME_ENTRY_RE, line)
-
-            # On lines stating time deltas
-            if hour_search:
-                # Grab start time
-                hour1 = int(hour_search.group(1))
-                min1 = 0
-                if hour_search.group(2):
-                    min1 = int(hour_search.group(2))
-                start_time = dt.datetime(*DUMMY_DATE, hour1, min1)
-                # Grab end time
-                hour2 = int(hour_search.group(3))
-                min2 = 0
-                if hour_search.group(4) is not None:
-                    min2 = int(hour_search.group(4))
-                end_time = dt.datetime(*DUMMY_DATE, hour2, min2)
-
-                # Calculate and print Time Delta
-                tdelta = end_time - start_time
-                if tdelta.days < 0:
-                    # Make all timedeltas be < 12 hours.
-                    tdelta = dt.timedelta(
-                        days=0, seconds=(tdelta.seconds - 60*60*12))
-                if args.quiet == 0:
-                    print_delta_line(hour1, min1, hour2, min2, tdelta)
-
-                # Accumulate the total hours
-                total += tdelta
-
-            else:  # Description lines
-                if args.verbose >= 1:
-                    # Print Non-timedelta lines
-                    if not re.search(r'Total:|^\n', line):
-                        print(line.rstrip())
-
-        # Convert seconds to hours
-        total_hrs = total.total_seconds()/3600
-
-    return f'{total_hrs:>32} hours'
-    # TODO add flag to convert to work day scale
-    # \nOR {(total_hrs)//8} work_days and {total_hrs % 8} hours'
-
-
 def weekly_report(date_contained: dt.date,
                   tag_sort: bool = False,
                   verbose: int = 0):
