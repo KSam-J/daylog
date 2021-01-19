@@ -4,6 +4,9 @@ import re
 
 STRIP_TAG_RE = re.compile(r'[a-zA-Z_+]*')
 
+HOURS_IN_WDAY = 8
+SECONDS_IN_HOUR = 60 * 60
+
 
 class TimeBlip():
     """A single timedelta of work with metadata."""
@@ -50,13 +53,21 @@ class TimeBlob():
         self.tag_set = tag_set if tag_set else set()
 
     @property
-    def blob_total(self):
+    def blob_total(self) -> dt.timedelta:
         """Calculate the total of all blips."""
         blob_sum = dt.timedelta()
         for blip in self.blip_list:
             blob_sum += blip.tdelta
 
         return blob_sum
+
+    @property
+    def total_work_days(self) -> float:
+        """Return the blob_total in work days and hours."""
+        # Calculate work days
+        work_days = (self.blob_total.total_seconds() / SECONDS_IN_HOUR) \
+            / HOURS_IN_WDAY
+        return work_days
 
     def __add__(self, other_blob):
         """Allow addition of Blobs."""

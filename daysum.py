@@ -83,6 +83,11 @@ def weekly_report(date_contained: dt.date,
                   tag_sort: bool = False,
                   verbose: int = 0):
     """Generate and display the weekly report."""
+    def print_workday_total(blob: TimeBlob):
+        full_days = int(blob.total_work_days)
+        remainder = blob.blob_total - dt.timedelta(hours=(full_days * 8))
+        print(f'\nWeekly Total{full_days:>7} days {remainder}')
+
     # Get the week and year in question
     year_iq, week_iq, _ = date_contained.isocalendar()
 
@@ -102,13 +107,14 @@ def weekly_report(date_contained: dt.date,
         # Deliniate each group of daily tags
         print(dt.date(*date).strftime('%a %b %d %Y'))
 
-        gen_sum_with_blob(beget_filepath(*date),
-                          week_blob,
-                          quiet=1,
-                          tag_summary=tag_sort,
-                          verbose=verbose)
+        daily_blob = gen_sum_with_blob(beget_filepath(*date),
+                                       quiet=1,
+                                       tag_summary=tag_sort,
+                                       verbose=verbose)
+        week_blob = week_blob + daily_blob
 
-    return f'\nWeekly Total{str(week_blob.blob_total):>20}'
+    print_workday_total(week_blob)
+    return week_blob
 
 
 def driver():
@@ -161,13 +167,11 @@ def driver():
                                  quiet=q_val,
                                  verbose=args.verbose)
         total_hrs = blob.blob_total.total_seconds()/3600
-        total_str = f'{total_hrs:>32} hours'
+        print(f'{total_hrs:>32} hours')
     else:
-        total_str = weekly_report(dt.date(*gen_args),
-                                  tag_sort=args.tag_sort,
-                                  verbose=args.verbose)
-
-    print(total_str)
+        weekly_blob = weekly_report(dt.date(*gen_args),
+                                    tag_sort=args.tag_sort,
+                                    verbose=args.verbose)
 
 
 if __name__ == '__main__':
