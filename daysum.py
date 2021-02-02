@@ -172,6 +172,9 @@ def driver():
                                  verbose=args.verbose)
         total_hrs = blob.blob_total.total_seconds()/3600
         print(f'{total_hrs:>32} hours')
+        probar(get_expected_time(),
+               int(blob.blob_total.total_seconds() / FIFTEEN_MINUTES),
+               8 * 4)
     else:
         weekly_blob = weekly_report(dt.date(*gen_args),
                                     tag_sort=args.tag_sort,
