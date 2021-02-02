@@ -5,6 +5,7 @@ import datetime as dt
 import os
 import re
 
+from probar import FIFTEEN_MINUTES, get_expected_time, probar
 from timeblob import TimeBlip, TimeBlob
 from util import beget_filepath, error_handler
 
@@ -114,6 +115,9 @@ def weekly_report(date_contained: dt.date,
         week_blob = week_blob + daily_blob
 
     print_workday_total(week_blob)
+    probar(get_expected_time(weekly=True),
+           int(week_blob.blob_total.total_seconds() / FIFTEEN_MINUTES),
+           40 * 4)
     return week_blob
 
 
