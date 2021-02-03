@@ -47,12 +47,12 @@ def get_expected_time(weekly=False):
     expected_today = int(tdelta.total_seconds() / FIFTEEN_MINUTES)
 
     # Account for the lunch break
-    NOON = dt.datetime(now.year, now.month, now.day, 12, tzinfo=PHOENIX_TZ)
-    ONE_PM = dt.datetime(now.year, now.month, now.day, 13, tzinfo=PHOENIX_TZ)
+    noon = dt.datetime(now.year, now.month, now.day, 12, tzinfo=PHOENIX_TZ)
+    one_pm = dt.datetime(now.year, now.month, now.day, 13, tzinfo=PHOENIX_TZ)
     offset = 0
-    if NOON < now < ONE_PM:
-        offset = int((NOON - now).total_seconds() / FIFTEEN_MINUTES)
-    elif ONE_PM < now:
+    if noon < now < one_pm:
+        offset = int((noon - now).total_seconds() / FIFTEEN_MINUTES)
+    elif one_pm < now:
         offset = 4  # UNITS
     expected_today -= offset
 
