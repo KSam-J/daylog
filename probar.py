@@ -46,6 +46,17 @@ def get_expected_time(weekly=False):
     tdelta = start_of_day - now
     expected_today = int(tdelta.total_seconds() / FIFTEEN_MINUTES)
 
+    # Account for the lunch break
+    NOON = dt.datetime(now.year, now.month, now.day, 12, tzinfo=PHOENIX_TZ)
+    ONE_PM = dt.datetime(now.year, now.month, now.day, 13, tzinfo=PHOENIX_TZ)
+    if NOON < now < ONE_PM:
+        offset = int((NOON - now).total_seconds() / FIFTEEN_MINUTES)
+        expected_today = expected_today - offset
+
+    # Cap the expected_today at eight hours a day
+    if expected_today > UNITS_PER_DAY:
+        expected_today = UNITS_PER_DAY
+
     if weekly:
         weekday = dt.date.today().weekday()
         expected_upto_today = UNITS_PER_DAY * weekday
