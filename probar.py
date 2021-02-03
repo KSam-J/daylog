@@ -43,7 +43,7 @@ def get_expected_time(weekly=False):
     now = dt.datetime.now(dt.timezone.utc)
 
     start_of_day = dt.datetime(now.year, now.month, now.day, *START_OF_DAY)
-    tdelta = now - start_of_day
+    tdelta = start_of_day - now
     expected_today = int(tdelta.total_seconds() / FIFTEEN_MINUTES)
 
     if weekly:
