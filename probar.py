@@ -40,7 +40,7 @@ def probar(expected, done, total):
 
 
 def get_expected_time(weekly=False):
-    now = dt.datetime.now(dt.timezone.utc)
+    now = dt.datetime.now(PHOENIX_TZ)
 
     start_of_day = dt.datetime(now.year, now.month, now.day, *START_OF_DAY)
     tdelta = abs(start_of_day - now)
