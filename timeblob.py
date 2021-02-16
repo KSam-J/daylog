@@ -57,6 +57,11 @@ class TimeBlob():
         self.blip_list = blip_list if blip_list else list()
         self.tag_set = tag_set if tag_set else set()
 
+        # Initialize the tag_set if blip_list is populated
+        if self.blip_list:
+            for blip in self.blip_list:
+                self.tag_set.add(blip.tag)
+
     @property
     def blob_total(self) -> dt.timedelta:
         """Calculate the total of all blips."""
