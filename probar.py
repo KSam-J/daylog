@@ -21,7 +21,7 @@ def probar(expected, done, total):
     done = int(done)
     total = int(total)
     markers = [
-        '\x1b[7m\x1b[1m#\x1b[0m',  # On Track
+        '\x1b[30m\x1b[107m\x1b[1m#\x1b[0m',  # On Track
         '\x1b[32m\x1b[107m \x1b[0m',  # Ahead
         '#\x1b[0m',                 # Behind
         ' '                   # Left
