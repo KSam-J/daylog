@@ -24,6 +24,11 @@ class TimeBlip():
         self.dummy = False
 
     @property
+    def date(self) -> dt.date:
+        """Return the date of the blob."""
+        return self.start.date()
+
+    @property
     def tdelta(self) -> dt.timedelta:
         """Return the calculated stop - start time."""
         tdelta = self.stop - self.start
