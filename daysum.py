@@ -4,6 +4,7 @@ import argparse
 import datetime as dt
 import os
 import re
+from typing import List
 
 from probar import FIFTEEN_MINUTES, get_expected_time, probar
 from timeblob import TimeBlip, TimeBlob
@@ -80,6 +81,21 @@ def gen_sum_with_blob(filename,
     return blob
 
 
+def get_week_list(date_contained: dt.date) -> List[dt.date]:
+    """Return a list of dates from the week containing a provided date."""
+    # Get the week and year in question
+    year_iq, week_iq, _ = date_contained.isocalendar()
+
+    # Determine the dates contained by the week in question
+    date_list = list()
+    for weekday in range(1, 8):
+        date_in_week = dt.date.fromisocalendar(year_iq, week_iq, weekday)
+        date_list.append(
+            dt.date(date_in_week.year, date_in_week.month, date_in_week.day))
+
+    return date_list
+
+
 def weekly_report(date_contained: dt.date,
                   tag_sort: bool = False,
                   verbose: int = 0):
@@ -89,26 +105,19 @@ def weekly_report(date_contained: dt.date,
         remainder = blob.blob_total - dt.timedelta(hours=(full_days * 8))
         print(f'\nWeekly Total{full_days:>7} days {remainder}')
 
-    # Get the week and year in question
-    year_iq, week_iq, _ = date_contained.isocalendar()
-
-    # Determine the dates contained by the week in question
-    date_list = list()
-    for weekday in range(1, 8):
-        date_in_week = dt.date.fromisocalendar(year_iq, week_iq, weekday)
-        date_list.append(
-            (date_in_week.year, date_in_week.month, date_in_week.day))
+    date_list = get_week_list(date_contained)
 
     week_blob = TimeBlob()
     # Place all dates in week into a single blob
     for date in date_list:
+        file_path = beget_filepath(date.year, date.month, date.day)
         # Only process files that exist
-        if not os.path.isfile(beget_filepath(*date)):
+        if not os.path.isfile(file_path):
             continue
         # Deliniate each group of daily tags
-        print(dt.date(*date).strftime('%a %b %d %Y'))
+        print(date.strftime('%a %b %d %Y'))
 
-        daily_blob = gen_sum_with_blob(beget_filepath(*date),
+        daily_blob = gen_sum_with_blob(file_path,
                                        quiet=1,
                                        tag_summary=tag_sort,
                                        verbose=verbose)
