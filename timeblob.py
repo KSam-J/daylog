@@ -1,4 +1,6 @@
 """Contain the classes used to organize time log data."""
+from __future__ import annotations
+
 import datetime as dt
 import re
 
@@ -103,3 +105,16 @@ class TimeBlob():
                 if blip.tag == tag:
                     tag_total += blip.tdelta
             print(f'    {str(tag_total):>8}')
+
+    def sub_blob(self,
+                 start_date: dt.date,
+                 end_date: dt.date = None) -> TimeBlob:
+        """Return a new blob with only blips in a date range [inclusive]."""
+        # Return a single day's blips if only one arg is given
+        if not end_date:
+            end_date = start_date
+        # Iterate and choose correct blips
+        new_list = [blip for blip in self.blip_list
+                    if start_date <= blip.date <= end_date]
+
+        return TimeBlob(new_list)
