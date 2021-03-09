@@ -16,7 +16,8 @@ TIME_ENTRY_RE = re.compile(r'(\d{1,2}):?(\d{1,2})?-(\d{1,2}):?(\d{1,2})?')
 
 def print_delta_line(hr1, min1, hr2, min2, delta):
     """Pretty print the time delta line."""
-    print(f'{hr1:02}:{min1:02}-{hr2:02}:{min2:02}\t\t\u0394{delta}')
+    delta_value = f'\u0394{str(delta):>8}'
+    print(f'{hr1:02}:{min1:02}-{hr2:02}:{min2:02}{delta_value:>23}')
 
 
 def gen_sum_with_blob(filename,
@@ -180,7 +181,7 @@ def driver():
                                  quiet=q_val,
                                  verbose=args.verbose)
         total_hrs = blob.blob_total.total_seconds()/3600
-        print(f'{total_hrs:>32} hours')
+        print(f'{total_hrs:>28} hours')
         probar(get_expected_time(),
                int(blob.blob_total.total_seconds() / FIFTEEN_MINUTES),
                8 * 4)
