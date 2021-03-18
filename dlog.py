@@ -4,8 +4,9 @@ import argparse
 import datetime as dt
 import os
 import subprocess
+from pathlib import Path
 
-from util import beget_path_and_file
+from util import beget_filepath
 
 
 def edit_timesheet(filename: os.PathLike = None):
@@ -37,19 +38,19 @@ def driver():
     if args.yester:
         days_in_past = dt.timedelta(args.yester)
         past_date = today - days_in_past
-        logpath, logname = beget_path_and_file(past_date)
+        filepath = beget_filepath(past_date)
     elif args.month is None:
-        logpath, logname = beget_path_and_file(today)
+        filepath = beget_filepath(today)
     else:
         # Default behavior, use month and day to determine filename
         args.month = int(args.month)
-        logpath, logname = beget_path_and_file(dt.date(
+        filepath = beget_filepath(dt.date(
             today.year, args.month, args.day))
 
     # Create the path to the log file if it does not already exist
-    os.makedirs(logpath, exist_ok=True)
+    os.makedirs(Path(filepath).parent, exist_ok=True)
 
-    edit_timesheet(f'{logpath}{logname}')
+    edit_timesheet(f'{filepath}')
 
 
 if __name__ == '__main__':
