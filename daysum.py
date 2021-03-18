@@ -24,7 +24,8 @@ def gen_sum_with_blob(filename,
                       blob: TimeBlob = None,
                       quiet: int = 0,
                       verbose: int = 0,
-                      tag_summary: bool = False):
+                      tag_summary: bool = False,
+                      date=None):
     """Read a logfile and generate a summary of the time log."""
     # Check existence of file
     if not os.path.isfile(filename):
@@ -33,6 +34,11 @@ def gen_sum_with_blob(filename,
 
     if blob is None:
         blob = TimeBlob()
+
+    if date:
+        single_date = date
+    else:
+        single_date = DUMMY_DATE
 
     # Begin transfering text info to TimeBlob data stucture
     with open(filename, 'r') as log:
@@ -48,13 +54,13 @@ def gen_sum_with_blob(filename,
                 min1 = 0
                 if hour_search.group(2):
                     min1 = int(hour_search.group(2))
-                start_time = dt.datetime(*DUMMY_DATE, hour1, min1)
+                start_time = dt.datetime(*single_date, hour1, min1)
                 # Grab end time
                 hour2 = int(hour_search.group(3))
                 min2 = 0
                 if hour_search.group(4) is not None:
                     min2 = int(hour_search.group(4))
-                end_time = dt.datetime(*DUMMY_DATE, hour2, min2)
+                end_time = dt.datetime(*single_date, hour2, min2)
 
                 purgatory_blip = TimeBlip(start_time, end_time)
 
@@ -121,7 +127,8 @@ def weekly_report(date_contained: dt.date,
         daily_blob = gen_sum_with_blob(file_path,
                                        quiet=1,
                                        tag_summary=tag_sort,
-                                       verbose=verbose)
+                                       verbose=verbose,
+                                       date=(date.year, date.month, date.day))
         week_blob = week_blob + daily_blob
 
     print_workday_total(week_blob)
