@@ -37,16 +37,14 @@ def driver():
     if args.yester:
         days_in_past = dt.timedelta(args.yester)
         past_date = today - days_in_past
-        logpath, logname = beget_path_and_file(
-            past_date.year, past_date.month, past_date.day)
+        logpath, logname = beget_path_and_file(past_date)
     elif args.month is None:
-        logpath, logname = beget_path_and_file(
-            today.year, today.month, today.day)
+        logpath, logname = beget_path_and_file(today)
     else:
         # Default behavior, use month and day to determine filename
         args.month = int(args.month)
-        logpath, logname = beget_path_and_file(
-            today.year, args.month, args.day)
+        logpath, logname = beget_path_and_file(dt.date(
+            today.year, args.month, args.day))
 
     # Create the path to the log file if it does not already exist
     os.makedirs(logpath, exist_ok=True)

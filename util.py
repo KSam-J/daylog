@@ -15,19 +15,17 @@ def error_handler(error_str):
     print(error_str)
 
 
-def beget_path_and_file(year, month, day):
+def beget_path_and_file(date: dt.date):
     """Generate full filepath of log file for select date."""
-    date = dt.datetime(year, month, day)
     specific_path = f'{LOG_PATH}/{date.strftime(r"%Y/%b")}{FOLDER_SUFFIX}/'
-    filename = f'log{month:02}_{day:02}.txt'
+    filename = BACK_COMPAT_FILE.format(month=date.month, day=date.day)
 
     return (specific_path, filename)
 
 
-def beget_filepath(year, month, day):
+def beget_filepath(date: dt.date):
     """Generate full filepath of log file for select date."""
-    date = dt.datetime(year, month, day)
     specific_path = f'{LOG_PATH}/{date.strftime(r"%Y/%b")}{FOLDER_SUFFIX}/'
-    filename = f'log{month:02}_{day:02}.txt'
+    filename = BACK_COMPAT_FILE.format(month=date.month, day=date.day)
 
     return f'{specific_path}{filename}'

@@ -111,7 +111,7 @@ def weekly_report(date_contained: dt.date,
     week_blob = TimeBlob()
     # Place all dates in week into a single blob
     for date in date_list:
-        file_path = beget_filepath(date.year, date.month, date.day)
+        file_path = beget_filepath(date)
         # Only process files that exist
         if not os.path.isfile(file_path):
             continue
@@ -175,20 +175,28 @@ def driver():
         args.file_or_month = int(args.file_or_month)
         gen_args = [args.year, args.file_or_month, args.day]
 
-    if not args.week:
+    d_in_q = dt.date(*gen_args)  # date in question
+
+    if args.week:
+        weekly_blob = weekly_report(d_in_q,
+                                    tag_sort=args.tag_sort,
+                                    verbose=args.verbose)
+    elif args.daptiv:
+        weekly_blob = weekly_report(d_in_q,
+                                    tag_sort=args.tag_sort,
+                                    verbose=args.verbose)
+        daptiv_format(weekly_blob)
+    else:
         q_val = 1 if args.quiet or args.tag_sort else 0
-        blob = gen_sum_with_blob(beget_filepath(*gen_args),
+        blob = gen_sum_with_blob(beget_filepath(d_in_q),
                                  quiet=q_val,
                                  verbose=args.verbose)
         total_hrs = blob.blob_total.total_seconds()/3600
         print(f'{total_hrs:>28} hours')
-        probar(get_expected_time(),
+        ex_time = get_expected_time() if d_in_q == today else 8 * 4
+        probar(ex_time,
                int(blob.blob_total.total_seconds() / FIFTEEN_MINUTES),
                8 * 4)
-    else:
-        weekly_blob = weekly_report(dt.date(*gen_args),
-                                    tag_sort=args.tag_sort,
-                                    verbose=args.verbose)
 
 
 if __name__ == '__main__':
