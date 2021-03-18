@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import datetime as dt
 import re
+from typing import List, Set
 
 STRIP_TAG_RE = re.compile(r'[a-zA-Z_+]*')
 
@@ -54,10 +55,12 @@ class TimeBlip():
 class TimeBlob():
     """A loosely correlated group of TimeBlips."""
 
-    def __init__(self, blip_list=None, tag_set=None):
+    def __init__(self,
+                 blip_list: List[TimeBlip] = None,
+                 tag_set: Set[str] = None):
         """Create an empty list for holding TimeBlips."""
-        self.blip_list = blip_list if blip_list else list()
-        self.tag_set = tag_set if tag_set else set()
+        self.blip_list: List[TimeBlip] = blip_list if blip_list else list()
+        self.tag_set: Set[str] = tag_set if tag_set else set()
 
         # Initialize the tag_set if blip_list is populated
         if self.blip_list:
@@ -80,6 +83,15 @@ class TimeBlob():
         work_days = (self.blob_total.total_seconds() / SECONDS_IN_HOUR) \
             / HOURS_IN_WDAY
         return work_days
+
+    @property
+    def date_set(self) -> Set[dt.date]:
+        """Return a list of all dates represented in blip list."""
+        # Read all blips and get dates
+        date_set = set()
+        for blip in self.blip_list:
+            date_set.add(blip.start.date())
+        return date_set
 
     def __add__(self, other_blob):
         """Allow addition of Blobs."""
@@ -118,3 +130,18 @@ class TimeBlob():
                     if start_date <= blip.date <= end_date]
 
         return TimeBlob(new_list)
+
+    def filter_by(self, tags: List[str]) -> TimeBlob:
+        """Return a sub blob with only certain tags."""
+        # Check tag_list for desired tags
+        for tag in tags:
+            if tag not in self.tag_set:
+                tags.remove(tag)
+        # Return an empty Blob if tags are not present in self
+        if not tags:
+            return TimeBlob()
+        # Search through blip_list for tagged entries
+        filtered_blips = [blip for blip in self.blip_list if blip.tag in tags]
+
+        # Return a new Blob with only tagged entries
+        return TimeBlob(filtered_blips)
