@@ -8,7 +8,7 @@ from typing import List
 
 from probar import FIFTEEN_MINUTES, get_expected_time, probar
 from timeblob import TimeBlip, TimeBlob
-from util import beget_filepath, error_handler
+from util import beget_date, beget_filepath, error_handler
 
 DUMMY_DATE = (1986, 2, 21)
 TIME_ENTRY_RE = re.compile(r'(\d{1,2}):?(\d{1,2})?-(\d{1,2}):?(\d{1,2})?')
