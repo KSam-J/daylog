@@ -138,6 +138,45 @@ def weekly_report(date_contained: dt.date,
     return week_blob
 
 
+def daptiv_format(blob: TimeBlob) -> None:
+    """Display tdeltas and descriptions in a format for transfer to daptiv."""
+    # Segragate blobs by tag and filter the descriptions
+    week_list = get_week_list(list(blob.date_set)[0])
+    print()
+    print(f'{"":12}', end='')
+    for date in week_list:
+        day = date.strftime('%A')
+        print(f'{day:>12}', end='')
+    print('\n')
+    print(f'{"":12}', end='')
+    for date in week_list:
+        print(f'{str(date):>12}', end='')
+    print('\n')
+    for tag in blob.tag_set:
+        print("\nTag: ", tag, '----------------')
+        filtered_blob = blob.filter_by([tag])
+        # Print the descriptions, w/o repeated tag
+        for blip in filtered_blob.blip_list:
+            print(blip.desc[len(blip.tag)+1:])
+        # Print description and tdeltas per day
+        date_list = list(filtered_blob.date_set)
+        date_list.sort()
+        week_struct = get_week_list(date_list[0])
+
+        print(f'{"":12}', end='')
+        for date in week_struct:
+            if date in date_list:
+                daily_blob = filtered_blob.sub_blob(date)
+                # print(date)
+                # daily_blob.print_total()
+                print(f'{str(daily_blob.blob_total):>12}', end='')
+            else:
+                print(f'{"":12}', end='')
+        print('\n')
+
+    # Print Some Totals for Convenience
+
+
 def driver():
     """Contain the arg parser and perform main functions."""
     today = dt.date.today()
@@ -167,6 +206,8 @@ def driver():
                         help='display timedeltas organized by tag')
     parser.add_argument('-w', '--week', action='store_true',
                         help='display the weekly report')
+    parser.add_argument('-d', '--daptiv', action='store_true',
+                        help='Display data in daptiv format')
 
     args = parser.parse_args()
 
