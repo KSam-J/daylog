@@ -6,6 +6,8 @@ import os
 import re
 from typing import List
 
+from tabulate import tabulate
+
 from probar import FIFTEEN_MINUTES, get_expected_time, probar
 from timeblob import TimeBlip, TimeBlob
 from util import beget_date, beget_filepath, error_handler
@@ -139,43 +141,62 @@ def weekly_report(date_contained: dt.date,
 
 
 def daptiv_format(blob: TimeBlob) -> None:
-    """Display tdeltas and descriptions in a format for transfer to daptiv."""
-    # Segragate blobs by tag and filter the descriptions
-    week_list = get_week_list(list(blob.date_set)[0])
-    print()
-    print(f'{"":12}', end='')
-    for date in week_list:
-        day = date.strftime('%A')
-        print(f'{day:>12}', end='')
-    print('\n')
-    print(f'{"":12}', end='')
-    for date in week_list:
-        print(f'{str(date):>12}', end='')
-    print('\n')
+    """Display tdeltas and descriptions in a format for transfer to daptiv.
+
+    Assume that the blob only contains dates from a single week (M-Sun).
+    """
+
+    def get_table_header(date_list: List[dt.date]) -> List[str]:
+        """Return a list with each table header for tabulate."""
+        # Check that all dates are in the same week
+        iso_week = None
+        for date in date_list:
+            _, week_num, _ = date.isocalendar()
+            if not iso_week:
+                iso_week = week_num
+            elif iso_week != week_num:
+                raise ValueError('Received dates from different iso-weeks')
+
+        header_list = list()
+        days_in_week = get_week_list(date_list[0])
+        # Print out the Weekly header
+        for date in days_in_week:
+            day = date.strftime('%A')
+            day += f'\n{str(date)}'
+            header_list.append(day)
+
+        return header_list
+
+    vector_list = list()
+    # Segregate blobs by tag and filter the descriptions
     for tag in blob.tag_set:
+        # Print the descriptions, w/o repeated tag
         print("\nTag: ", tag, '----------------')
         filtered_blob = blob.filter_by([tag])
-        # Print the descriptions, w/o repeated tag
+
         for blip in filtered_blob.blip_list:
-            print(blip.desc[len(blip.tag)+1:])
-        # Print description and tdeltas per day
-        date_list = list(filtered_blob.date_set)
-        date_list.sort()
-        week_struct = get_week_list(date_list[0])
+            # Only print if there is a detailed description
+            if len(blip.desc) > len(blip.tag)+1:
+                print(blip.desc[len(blip.tag)+1:])
 
-        print(f'{"":12}', end='')
-        for date in week_struct:
-            if date in date_list:
+        # Organize the dates in chronological order
+        tag_dates = list(filtered_blob.date_set)
+        tag_dates.sort()
+
+        # Create the time vector
+        time_vector = list()
+        days_in_week: List[dt.date] = get_week_list(tag_dates[0])
+        for date in days_in_week:
+            if date in tag_dates:
                 daily_blob = filtered_blob.sub_blob(date)
-                # print(date)
-                # daily_blob.print_total()
-                print(f'{str(daily_blob.blob_total):>12}', end='')
+                time_vector.append(f'{str(daily_blob.blob_total):>12}')
             else:
-                print(f'{"":12}', end='')
-        print('\n')
+                time_vector.append('')
+        vector_list.append(time_vector)
 
-    # Print Some Totals for Convenience
-
+    # Print the tabulated table
+    headers = get_table_header(list(blob.date_set))
+    print(tabulate(vector_list, headers))
 
 def driver():
     """Contain the arg parser and perform main functions."""
