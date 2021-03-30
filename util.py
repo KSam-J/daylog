@@ -1,6 +1,7 @@
 """Contain general use functions for daysum programs."""
 import datetime as dt
 import re
+from os import sys
 
 # FILENAME = f'log'
 LOG_PATH = '/home/samkel/journal'
@@ -14,9 +15,26 @@ BACK_COMPAT_RE = re.compile(r'log([01]\d)_([0-3]\d).txt')  # MM_DD
 BACK_COMPAT_FILE = 'log{month:02}_{day:02}.txt'
 
 
-def error_handler(error_str):
+def error_handler(error_str: str = None, exception: Exception = None):
     """Print error info to screen and exit the program."""
-    print(error_str)
+    # Determine what to print
+    if error_str:
+        print(error_str)
+    elif exception:
+        print(exception)
+    else:
+        print('System Error!')
+
+    # Determine exit code
+    exit_code = 1
+    if exception:
+        # Use the provided errno, if possible
+        try:
+            exit_code = exception.errno
+        except AttributeError:
+            pass
+
+    sys.exit(exit_code)
 
 
 def beget_filepath(date: dt.date):
