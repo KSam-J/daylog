@@ -29,11 +29,6 @@ def gen_sum_with_blob(filename,
                       tag_summary: bool = False,
                       date=None):
     """Read a logfile and generate a summary of the time log."""
-    # Check existence of file
-    if not os.path.isfile(filename):
-        error_handler(f'File: "{filename}" does not exist.')
-        return None
-
     if blob is None:
         blob = TimeBlob()
 
@@ -269,4 +264,7 @@ def driver():
 
 
 if __name__ == '__main__':
-    driver()
+    try:
+        driver()
+    except FileNotFoundError as exc:
+        error_handler(exception=exc)
