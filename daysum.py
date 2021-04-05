@@ -160,6 +160,9 @@ def daptiv_format(blob: TimeBlob) -> None:
             day += f'\n{str(date)}'
             header_list.append(day)
 
+        # Prepend an empty str to account for Y-axis labels
+        header_list = [''] + header_list
+
         return header_list
 
     vector_list = list()
@@ -178,8 +181,8 @@ def daptiv_format(blob: TimeBlob) -> None:
         tag_dates = list(filtered_blob.date_set)
         tag_dates.sort()
 
-        # Create the time vector
-        time_vector = list()
+        # Create the time vector with the tag as the left-most (first) entry
+        time_vector = [tag]
         days_in_week: List[dt.date] = get_week_list(tag_dates[0])
         for date in days_in_week:
             if date in tag_dates:
