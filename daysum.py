@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 """Read Time log and print summary on stdout."""
+from __future__ import annotations
+
 import argparse
 import datetime as dt
 import os
@@ -22,23 +24,23 @@ def print_delta_line(hr1, min1, hr2, min2, delta):
     print(f'{hr1:02}:{min1:02}-{hr2:02}:{min2:02}{delta_value:>23}')
 
 
-def gen_sum_with_blob(filename,
-                      blob: TimeBlob = None,
-                      quiet: int = 0,
-                      verbose: int = 0,
-                      tag_summary: bool = False,
-                      date=None):
-    """Read a logfile and generate a summary of the time log."""
-    if blob is None:
-        blob = TimeBlob()
+def log_2_blob(filename: str, date: dt.date | None = None) -> TimeBlob:
+    """Scan a log file and place the data in a TimeBlip."""
+    # Check existence of file
+    blob = None
+    if not os.path.isfile(filename):
+        error_handler(f'File: "{filename}" does not exist.')
 
-    if date:
-        single_date = date
-    else:
-        single_date = DUMMY_DATE
+    # Determine the date corresponding to filename
+    if not date:
+        date = beget_date(filename)
+        # second date check required until beget_date has back compat check
+        if not date:
+            date = dt.date(*DUMMY_DATE)
 
     # Begin transfering text info to TimeBlob data stucture
     with open(filename, 'r') as log:
+        blob = TimeBlob()
         purgatory_blip = None
 
         for line in log:
@@ -51,20 +53,15 @@ def gen_sum_with_blob(filename,
                 min1 = 0
                 if hour_search.group(2):
                     min1 = int(hour_search.group(2))
-                start_time = dt.datetime(*single_date, hour1, min1)
+                start_time = dt.datetime.combine(date, dt.time(hour1, min1))
                 # Grab end time
                 hour2 = int(hour_search.group(3))
                 min2 = 0
                 if hour_search.group(4) is not None:
                     min2 = int(hour_search.group(4))
-                end_time = dt.datetime(*single_date, hour2, min2)
+                end_time = dt.datetime.combine(date, dt.time(hour2, min2))
 
                 purgatory_blip = TimeBlip(start_time, end_time)
-
-                # Calculate and print Time Delta
-                if quiet == 0:
-                    print_delta_line(hour1, min1, hour2, min2,
-                                     purgatory_blip.tdelta)
 
             else:  # Description lines
                 if isinstance(purgatory_blip, TimeBlip):
@@ -73,15 +70,8 @@ def gen_sum_with_blob(filename,
 
                     # Add the Blip to the Blob
                     blob.add_blip(purgatory_blip)
+                    # Reset the purgatory_blip for the next delta,desc pair
                     purgatory_blip = None
-                    if verbose >= 1:
-                        # Print Non-timedelta lines
-                        if not re.search(r'Total:|^\n', line):
-                            print(line.rstrip())
-
-    if tag_summary:
-        blob.print_tag_totals()
-
     return blob
 
 
@@ -255,9 +245,7 @@ def driver():
         daptiv_format(weekly_blob)
     else:
         q_val = 1 if args.quiet or args.tag_sort else 0
-        blob = gen_sum_with_blob(beget_filepath(d_in_q),
-                                 quiet=q_val,
-                                 verbose=args.verbose)
+        blob = log_2_blob(beget_filepath(d_in_q))
         total_hrs = blob.blob_total.total_seconds()/3600
         print(f'{total_hrs:>28} hours')
         ex_time = get_expected_time() if d_in_q == today else 8 * 4
