@@ -90,15 +90,8 @@ def get_week_list(date_contained: dt.date) -> List[dt.date]:
     return date_list
 
 
-def weekly_report(date_contained: dt.date,
-                  tag_sort: bool = False,
-                  verbose: int = 0):
-    """Generate and display the weekly report."""
-    def print_workday_total(blob: TimeBlob):
-        full_days = int(blob.total_work_days)
-        remainder = blob.blob_total - dt.timedelta(hours=(full_days * 8))
-        print(f'\nWeekly Total{full_days:>7} days {remainder}')
-
+def get_week_blob(date_contained: dt.date):
+    """Place a week's worth of logs into a blob."""
     date_list = get_week_list(date_contained)
 
     week_blob = TimeBlob()
@@ -111,18 +104,27 @@ def weekly_report(date_contained: dt.date,
         # Deliniate each group of daily tags
         print(date.strftime('%a %b %d %Y'))
 
-        daily_blob = gen_sum_with_blob(file_path,
-                                       quiet=1,
-                                       tag_summary=tag_sort,
-                                       verbose=verbose,
-                                       date=(date.year, date.month, date.day))
+        daily_blob = log_2_blob(file_path, date)
         week_blob = week_blob + daily_blob
+
+    return week_blob
+
+
+def weekly_report(date_contained: dt.date,
+                  tag_sort: bool = False,
+                  verbose: int = 0):
+    """Generate and display the weekly report."""
+    def print_workday_total(blob: TimeBlob):
+        full_days = int(blob.total_work_days)
+        remainder = blob.blob_total - dt.timedelta(hours=(full_days * 8))
+        print(f'\nWeekly Total{full_days:>7} days {remainder}')
+
+    week_blob = get_week_blob(date_contained)
 
     print_workday_total(week_blob)
     probar(get_expected_time(weekly=True),
            int(week_blob.blob_total.total_seconds() / FIFTEEN_MINUTES),
            40 * 4)
-    return week_blob
 
 
 def daptiv_format(blob: TimeBlob) -> None:
@@ -186,6 +188,7 @@ def daptiv_format(blob: TimeBlob) -> None:
     headers = get_table_header(list(blob.date_set))
     print(tabulate(vector_list, headers))
 
+
 def driver():
     """Contain the arg parser and perform main functions."""
     today = dt.date.today()
@@ -235,16 +238,14 @@ def driver():
     d_in_q = dt.date(*gen_args)  # date in question
 
     if args.week:
-        weekly_blob = weekly_report(d_in_q,
-                                    tag_sort=args.tag_sort,
-                                    verbose=args.verbose)
+        weekly_report(d_in_q,
+                      tag_sort=args.tag_sort,
+                      verbose=args.verbose)
     elif args.daptiv:
-        weekly_blob = weekly_report(d_in_q,
-                                    tag_sort=args.tag_sort,
-                                    verbose=args.verbose)
+        weekly_blob = get_week_blob(d_in_q)
         daptiv_format(weekly_blob)
     else:
-        q_val = 1 if args.quiet or args.tag_sort else 0
+        # q_val = 1 if args.quiet or args.tag_sort else 0
         blob = log_2_blob(beget_filepath(d_in_q))
         total_hrs = blob.blob_total.total_seconds()/3600
         print(f'{total_hrs:>28} hours')
