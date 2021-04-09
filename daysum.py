@@ -10,7 +10,7 @@ from typing import List
 
 from tabulate import tabulate
 
-from probar import FIFTEEN_MINUTES, get_expected_time, probar
+from probar import FIFTEEN_MINUTES, UNITS_PER_DAY, get_expected_time, probar
 from timeblob import TimeBlip, TimeBlob
 from util import beget_date, beget_filepath, error_handler
 
@@ -248,11 +248,11 @@ def driver():
         # q_val = 1 if args.quiet or args.tag_sort else 0
         blob = log_2_blob(beget_filepath(d_in_q))
         total_hrs = blob.blob_total.total_seconds()/3600
-        print(f'{total_hrs:>28} hours')
-        ex_time = get_expected_time() if d_in_q == today else 8 * 4
+        # print(f'{total_hrs:>28} hours')
+        ex_time = get_expected_time() if d_in_q == today else UNITS_PER_DAY
         probar(ex_time,
                int(blob.blob_total.total_seconds() / FIFTEEN_MINUTES),
-               8 * 4)
+               UNITS_PER_DAY)
 
 
 if __name__ == '__main__':
