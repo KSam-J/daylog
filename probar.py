@@ -35,9 +35,10 @@ def probar(expected, done, total):
     else:  # expected > done
         amounts = [done, 0, diff, (total - expected)]
 
-    bar_width = 34 if total < 32 else total + 2
+    bar_width = 34 if total < 32 else total + 2 + 11
     p_bar = progressbar.ProgressBar(widgets=widgets, max_value=10,
-                                    term_width=bar_width).start()
+                                    term_width=bar_width,
+                                    suffix=f'{done/4:5} hours').start()
     p_bar.update(amounts=amounts, force=True)
 
 
