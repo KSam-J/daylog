@@ -119,6 +119,12 @@ def weekly_report(date_contained: dt.date,
 
     week_blob = get_week_blob(date_contained)
 
+    for day in get_week_list(date_contained):
+        daily_total = week_blob.sub_blob(day).blob_total
+        if daily_total > dt.timedelta(0):
+            print(day.strftime('%a %b %d %Y'), end='')
+            print(f'{"":10}{daily_total}')
+
     print_workday_total(week_blob)
     probar(get_expected_time(weekly=True),
            int(week_blob.blob_total.total_seconds() / FIFTEEN_MINUTES),
