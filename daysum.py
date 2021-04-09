@@ -101,8 +101,6 @@ def get_week_blob(date_contained: dt.date):
         # Only process files that exist
         if not os.path.isfile(file_path):
             continue
-        # Deliniate each group of daily tags
-        print(date.strftime('%a %b %d %Y'))
 
         daily_blob = log_2_blob(file_path, date)
         week_blob = week_blob + daily_blob
