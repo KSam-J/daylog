@@ -168,11 +168,15 @@ def daptiv_format(blob: TimeBlob) -> None:
         print("\nTag: ", tag, '----------------')
         filtered_blob = blob.filter_by([tag])
 
+        # Collect the descriptions
+        desc_set = set()
         for blip in filtered_blob.blip_list:
             # Only print if there is a detailed description
             if len(blip.desc) > len(blip.tag)+1:
-                print(blip.desc[len(blip.tag)+1:])
-
+                desc_set.add(blip.desc[len(blip.tag)+1:])
+        # Print the descriptions
+        for desc in desc_set:
+            print(desc)
         # Organize the dates in chronological order
         tag_dates = list(filtered_blob.date_set)
         tag_dates.sort()
