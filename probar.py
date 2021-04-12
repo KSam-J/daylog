@@ -1,4 +1,5 @@
 #!/usr/bin/python
+"""Print progressbars and other resources for progressbars."""
 # -*- coding: utf-8 -*-
 
 from __future__ import (absolute_import, division, print_function,
@@ -17,6 +18,7 @@ UNITS_PER_DAY = 8 * 4
 
 
 def probar(expected, done, total):
+    """Print a progress bar denoting work done, expected, and total hours."""
     expected = int(expected)
     done = int(done)
     total = int(total)
@@ -43,6 +45,7 @@ def probar(expected, done, total):
 
 
 def get_expected_time(weekly=False):
+    """Calculate the expected amount of work that should be done."""
     now = dt.datetime.now(PHOENIX_TZ)
 
     start_of_day = dt.datetime(now.year, now.month, now.day, *START_OF_DAY)
