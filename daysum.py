@@ -110,7 +110,7 @@ def get_week_blob(date_contained: dt.date):
 
 def weekly_report(date_contained: dt.date,
                   tag_sort: bool = False,
-                  verbose: int = 0):
+                  verbose: int = 0) -> None:
     """Generate and display the weekly report."""
     def print_workday_total(blob: TimeBlob):
         full_days = int(blob.total_work_days)
@@ -131,7 +131,8 @@ def weekly_report(date_contained: dt.date,
            40 * 4)
 
 
-def daptiv_format(blob: TimeBlob) -> None:
+def daptiv_format(blob: TimeBlob,
+                  groups: List[List[str]] = None) -> None:
     """Display tdeltas and descriptions in a format for transfer to daptiv.
 
     Assume that the blob only contains dates from a single week (M-Sun).
@@ -163,10 +164,21 @@ def daptiv_format(blob: TimeBlob) -> None:
 
     vector_list = list()
     # Segregate blobs by tag and filter the descriptions
-    for tag in blob.tag_set:
+
+    # Apply tag groups
+    singelton_tags = list(blob.tag_set.copy())
+    # Strip tags in groups from singelton list
+    for group in groups:
+        for tag in group:
+            singelton_tags.remove(tag)
+    # Merge singelton and grouped tags for printing structure
+    tag_groups = [[tag] for tag in singelton_tags] + groups
+    tag_groups = sorted(tag_groups)
+
+    for tag_list in tag_groups:
         # Print the descriptions, w/o repeated tag
-        print("\nTag: ", tag, '----------------')
-        filtered_blob = blob.filter_by([tag])
+        print("\nTag: ", tag_list[0], '----------------')
+        filtered_blob = blob.filter_by(tag_list)
 
         # Collect the descriptions
         desc_set = set()
@@ -182,7 +194,7 @@ def daptiv_format(blob: TimeBlob) -> None:
         tag_dates.sort()
 
         # Create the time vector with the tag as the left-most (first) entry
-        time_vector = [tag]
+        time_vector = [tag_list[0]]
         days_in_week: List[dt.date] = get_week_list(tag_dates[0])
         for date in days_in_week:
             if date in tag_dates:
@@ -228,6 +240,9 @@ def driver():
                         help='display the weekly report')
     parser.add_argument('-d', '--daptiv', action='store_true',
                         help='Display data in daptiv format')
+    parser.add_argument('-g', '--group', action='append', default=None,
+                        type=str,
+                        help='enter tags to group together in weekly formats')
 
     args = parser.parse_args()
 
@@ -245,18 +260,21 @@ def driver():
 
     d_in_q = dt.date(*gen_args)  # date in question
 
+    # Determine the list of grouped tags
+    group_list = list()
+    if args.group:
+        for g_str in args.group:
+            group_list.append(g_str.split(sep=','))
+
     if args.week:
         weekly_report(d_in_q,
                       tag_sort=args.tag_sort,
                       verbose=args.verbose)
     elif args.daptiv:
         weekly_blob = get_week_blob(d_in_q)
-        daptiv_format(weekly_blob)
+        daptiv_format(weekly_blob, group_list)
     else:
-        # q_val = 1 if args.quiet or args.tag_sort else 0
         blob = log_2_blob(beget_filepath(d_in_q))
-        total_hrs = blob.blob_total.total_seconds()/3600
-        # print(f'{total_hrs:>28} hours')
         ex_time = get_expected_time() if d_in_q == today else UNITS_PER_DAY
         probar(ex_time,
                int(blob.blob_total.total_seconds() / FIFTEEN_MINUTES),
