@@ -12,6 +12,7 @@ FOLDER_SUFFIX = '_time_sheet'
 
 ISO_FMT_RE = re.compile(r'(19|20)\d{2}-[01]\d-[0-3]\d')  # YYYY-MM-DD
 BACK_COMPAT_RE = re.compile(r'log([01]\d)_([0-3]\d).txt')  # MM_DD
+ISO_FMT_FILE = 'log{year:4}-{month:02}-{day:02}.txt'
 BACK_COMPAT_FILE = 'log{month:02}_{day:02}.txt'
 
 

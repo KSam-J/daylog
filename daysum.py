@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 """Read Time log and print summary on stdout."""
+from __future__ import annotations
+
 import argparse
 import datetime as dt
 import os
@@ -8,7 +10,7 @@ from typing import List
 
 from tabulate import tabulate
 
-from probar import FIFTEEN_MINUTES, get_expected_time, probar
+from probar import FIFTEEN_MINUTES, UNITS_PER_DAY, get_expected_time, probar
 from timeblob import TimeBlip, TimeBlob
 from util import beget_date, beget_filepath, error_handler
 
@@ -22,23 +24,23 @@ def print_delta_line(hr1, min1, hr2, min2, delta):
     print(f'{hr1:02}:{min1:02}-{hr2:02}:{min2:02}{delta_value:>23}')
 
 
-def gen_sum_with_blob(filename,
-                      blob: TimeBlob = None,
-                      quiet: int = 0,
-                      verbose: int = 0,
-                      tag_summary: bool = False,
-                      date=None):
-    """Read a logfile and generate a summary of the time log."""
-    if blob is None:
-        blob = TimeBlob()
+def log_2_blob(filename: str, date: dt.date | None = None) -> TimeBlob:
+    """Scan a log file and place the data in a TimeBlip."""
+    # Check existence of file
+    blob = None
+    if not os.path.isfile(filename):
+        error_handler(f'File: "{filename}" does not exist.')
 
-    if date:
-        single_date = date
-    else:
-        single_date = DUMMY_DATE
+    # Determine the date corresponding to filename
+    if not date:
+        date = beget_date(filename)
+        # second date check required until beget_date has back compat check
+        if not date:
+            date = dt.date(*DUMMY_DATE)
 
     # Begin transfering text info to TimeBlob data stucture
     with open(filename, 'r') as log:
+        blob = TimeBlob()
         purgatory_blip = None
 
         for line in log:
@@ -51,20 +53,15 @@ def gen_sum_with_blob(filename,
                 min1 = 0
                 if hour_search.group(2):
                     min1 = int(hour_search.group(2))
-                start_time = dt.datetime(*single_date, hour1, min1)
+                start_time = dt.datetime.combine(date, dt.time(hour1, min1))
                 # Grab end time
                 hour2 = int(hour_search.group(3))
                 min2 = 0
                 if hour_search.group(4) is not None:
                     min2 = int(hour_search.group(4))
-                end_time = dt.datetime(*single_date, hour2, min2)
+                end_time = dt.datetime.combine(date, dt.time(hour2, min2))
 
                 purgatory_blip = TimeBlip(start_time, end_time)
-
-                # Calculate and print Time Delta
-                if quiet == 0:
-                    print_delta_line(hour1, min1, hour2, min2,
-                                     purgatory_blip.tdelta)
 
             else:  # Description lines
                 if isinstance(purgatory_blip, TimeBlip):
@@ -73,15 +70,8 @@ def gen_sum_with_blob(filename,
 
                     # Add the Blip to the Blob
                     blob.add_blip(purgatory_blip)
+                    # Reset the purgatory_blip for the next delta,desc pair
                     purgatory_blip = None
-                    if verbose >= 1:
-                        # Print Non-timedelta lines
-                        if not re.search(r'Total:|^\n', line):
-                            print(line.rstrip())
-
-    if tag_summary:
-        blob.print_tag_totals()
-
     return blob
 
 
@@ -100,15 +90,8 @@ def get_week_list(date_contained: dt.date) -> List[dt.date]:
     return date_list
 
 
-def weekly_report(date_contained: dt.date,
-                  tag_sort: bool = False,
-                  verbose: int = 0):
-    """Generate and display the weekly report."""
-    def print_workday_total(blob: TimeBlob):
-        full_days = int(blob.total_work_days)
-        remainder = blob.blob_total - dt.timedelta(hours=(full_days * 8))
-        print(f'\nWeekly Total{full_days:>7} days {remainder}')
-
+def get_week_blob(date_contained: dt.date):
+    """Place a week's worth of logs into a blob."""
     date_list = get_week_list(date_contained)
 
     week_blob = TimeBlob()
@@ -118,24 +101,38 @@ def weekly_report(date_contained: dt.date,
         # Only process files that exist
         if not os.path.isfile(file_path):
             continue
-        # Deliniate each group of daily tags
-        print(date.strftime('%a %b %d %Y'))
 
-        daily_blob = gen_sum_with_blob(file_path,
-                                       quiet=1,
-                                       tag_summary=tag_sort,
-                                       verbose=verbose,
-                                       date=(date.year, date.month, date.day))
+        daily_blob = log_2_blob(file_path, date)
         week_blob = week_blob + daily_blob
+
+    return week_blob
+
+
+def weekly_report(date_contained: dt.date,
+                  tag_sort: bool = False,
+                  verbose: int = 0) -> None:
+    """Generate and display the weekly report."""
+    def print_workday_total(blob: TimeBlob):
+        full_days = int(blob.total_work_days)
+        remainder = blob.blob_total - dt.timedelta(hours=(full_days * 8))
+        print(f'\nWeekly Total{full_days:>7} days {remainder}')
+
+    week_blob = get_week_blob(date_contained)
+
+    for day in get_week_list(date_contained):
+        daily_total = week_blob.sub_blob(day).blob_total
+        if daily_total > dt.timedelta(0):
+            print(day.strftime('%a %b %d %Y'), end='')
+            print(f'{"":10}{daily_total}')
 
     print_workday_total(week_blob)
     probar(get_expected_time(weekly=True),
            int(week_blob.blob_total.total_seconds() / FIFTEEN_MINUTES),
            40 * 4)
-    return week_blob
 
 
-def daptiv_format(blob: TimeBlob) -> None:
+def daptiv_format(blob: TimeBlob,
+                  groups: List[List[str]] = None) -> None:
     """Display tdeltas and descriptions in a format for transfer to daptiv.
 
     Assume that the blob only contains dates from a single week (M-Sun).
@@ -167,22 +164,37 @@ def daptiv_format(blob: TimeBlob) -> None:
 
     vector_list = list()
     # Segregate blobs by tag and filter the descriptions
-    for tag in blob.tag_set:
-        # Print the descriptions, w/o repeated tag
-        print("\nTag: ", tag, '----------------')
-        filtered_blob = blob.filter_by([tag])
 
+    # Apply tag groups
+    singelton_tags = list(blob.tag_set.copy())
+    # Strip tags in groups from singelton list
+    for group in groups:
+        for tag in group:
+            singelton_tags.remove(tag)
+    # Merge singelton and grouped tags for printing structure
+    tag_groups = [[tag] for tag in singelton_tags] + groups
+    tag_groups = sorted(tag_groups)
+
+    for tag_list in tag_groups:
+        # Print the descriptions, w/o repeated tag
+        print("\nTag: ", tag_list[0], '----------------')
+        filtered_blob = blob.filter_by(tag_list)
+
+        # Collect the descriptions
+        desc_set = set()
         for blip in filtered_blob.blip_list:
             # Only print if there is a detailed description
             if len(blip.desc) > len(blip.tag)+1:
-                print(blip.desc[len(blip.tag)+1:])
-
+                desc_set.add(blip.desc[len(blip.tag)+1:])
+        # Print the descriptions
+        for desc in desc_set:
+            print(desc)
         # Organize the dates in chronological order
         tag_dates = list(filtered_blob.date_set)
         tag_dates.sort()
 
         # Create the time vector with the tag as the left-most (first) entry
-        time_vector = [tag]
+        time_vector = [tag_list[0]]
         days_in_week: List[dt.date] = get_week_list(tag_dates[0])
         for date in days_in_week:
             if date in tag_dates:
@@ -195,6 +207,7 @@ def daptiv_format(blob: TimeBlob) -> None:
     # Print the tabulated table
     headers = get_table_header(list(blob.date_set))
     print(tabulate(vector_list, headers))
+
 
 def driver():
     """Contain the arg parser and perform main functions."""
@@ -227,6 +240,9 @@ def driver():
                         help='display the weekly report')
     parser.add_argument('-d', '--daptiv', action='store_true',
                         help='Display data in daptiv format')
+    parser.add_argument('-g', '--group', action='append', default=None,
+                        type=str,
+                        help='enter tags to group together in weekly formats')
 
     args = parser.parse_args()
 
@@ -244,26 +260,25 @@ def driver():
 
     d_in_q = dt.date(*gen_args)  # date in question
 
+    # Determine the list of grouped tags
+    group_list = list()
+    if args.group:
+        for g_str in args.group:
+            group_list.append(g_str.split(sep=','))
+
     if args.week:
-        weekly_blob = weekly_report(d_in_q,
-                                    tag_sort=args.tag_sort,
-                                    verbose=args.verbose)
+        weekly_report(d_in_q,
+                      tag_sort=args.tag_sort,
+                      verbose=args.verbose)
     elif args.daptiv:
-        weekly_blob = weekly_report(d_in_q,
-                                    tag_sort=args.tag_sort,
-                                    verbose=args.verbose)
-        daptiv_format(weekly_blob)
+        weekly_blob = get_week_blob(d_in_q)
+        daptiv_format(weekly_blob, group_list)
     else:
-        q_val = 1 if args.quiet or args.tag_sort else 0
-        blob = gen_sum_with_blob(beget_filepath(d_in_q),
-                                 quiet=q_val,
-                                 verbose=args.verbose)
-        total_hrs = blob.blob_total.total_seconds()/3600
-        print(f'{total_hrs:>28} hours')
-        ex_time = get_expected_time() if d_in_q == today else 8 * 4
+        blob = log_2_blob(beget_filepath(d_in_q))
+        ex_time = get_expected_time() if d_in_q == today else UNITS_PER_DAY
         probar(ex_time,
                int(blob.blob_total.total_seconds() / FIFTEEN_MINUTES),
-               8 * 4)
+               UNITS_PER_DAY)
 
 
 if __name__ == '__main__':

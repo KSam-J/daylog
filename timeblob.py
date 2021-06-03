@@ -104,19 +104,22 @@ class TimeBlob():
         self.tag_set.add(blip.tag)
         self.blip_list.append(blip)
 
-    def print_total(self):
-        """Print the grand total to stdout."""
-        print(self.blob_total)
+    # def print_total(self):
+    #     """Print the grand total to stdout."""
+    #     print(self.blob_total)
 
-    def print_tag_totals(self):
-        """Print the totals of each tag."""
+    def get_tag_totals(self):
+        """Get the totals of each tag."""
+        tag_to_total = dict()
         for tag in self.tag_set:
-            print(f'{tag:>20}', end='')
+            # print(f'{tag:>20}', end='')
             tag_total = dt.timedelta()
             for blip in self.blip_list:
                 if blip.tag == tag:
                     tag_total += blip.tdelta
-            print(f'    {str(tag_total):>8}')
+            tag_to_total.update(tag=tag_total)
+            # print(f'    {str(tag_total):>8}')
+        return tag_to_total
 
     def sub_blob(self,
                  start_date: dt.date,
