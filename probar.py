@@ -6,6 +6,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals, with_statement)
 
 import datetime as dt
+import os
 import sys
 
 import progressbar
@@ -15,6 +16,9 @@ START_OF_DAY = [9, 30, 0, 0, PHOENIX_TZ]
 
 FIFTEEN_MINUTES = 60 * 15  # Unit granularity
 UNITS_PER_DAY = 8 * 4
+
+# Formatting constants
+ENCLOSING_BAR_CHARS = 2
 
 
 def probar(expected, done, total):
@@ -37,10 +41,18 @@ def probar(expected, done, total):
     else:  # expected > done
         amounts = [done, 0, diff, (total - expected)]
 
-    bar_width = 34 if total < 32 else total + 2 + 11
+    suffix = f'{done/4:5} hours'
+    # Set bar_width
+    if total < UNITS_PER_DAY:
+        bar_width = UNITS_PER_DAY + ENCLOSING_BAR_CHARS
+    elif total < os.get_terminal_size()[0]:
+        bar_width = total + ENCLOSING_BAR_CHARS
+    else:
+        bar_width = os.get_terminal_size()[0]
+
     p_bar = progressbar.ProgressBar(widgets=widgets, max_value=10,
                                     term_width=bar_width,
-                                    suffix=f'{done/4:5} hours').start()
+                                    suffix=suffix).start()
     p_bar.update(amounts=amounts, force=True)
 
 
