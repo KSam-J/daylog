@@ -230,7 +230,6 @@ def daptiv_format(blob: TimeBlob,
 
 def driver():
     """Contain the arg parser and perform main functions."""
-
     parser = argparse.ArgumentParser(
         prog='daysum',
         usage='%(prog)s FILENAME\n'
@@ -244,7 +243,7 @@ def driver():
                         help='numeral of year',
                         type=int,
                         nargs='?',
-                        default=today.year)
+                        default=TODAY.year)
 
     parser.add_argument('-v', '--verbose', action='count', default=0,
                         help='show additional hourly info')
@@ -267,7 +266,7 @@ def driver():
     # Determine the argument types for the gen_sum function
     gen_args = list()
     if args.file_or_month is None:
-        gen_args = [today.year, today.month, today.day]
+        gen_args = [TODAY.year, TODAY.month, TODAY.day]
     elif os.path.isfile(args.file_or_month):
         # Read an explicitly defined file
         gen_args.append(args.file_or_month)
@@ -293,7 +292,7 @@ def driver():
         daptiv_format(weekly_blob, group_list)
     else:
         blob = log_2_blob(beget_filepath(d_in_q))
-        ex_time = get_expected_time() if d_in_q == today else UNITS_PER_DAY
+        ex_time = get_expected_time() if d_in_q == TODAY else UNITS_PER_DAY
         probar(ex_time,
                int(blob.blob_total.total_seconds() / FIFTEEN_MINUTES),
                UNITS_PER_DAY)
