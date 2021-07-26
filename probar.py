@@ -44,10 +44,12 @@ def probar(expected, done, total):
     suffix = f'{done/4:5} hours'
     # Set bar_width
     if total < UNITS_PER_DAY:
-        bar_width = UNITS_PER_DAY + ENCLOSING_BAR_CHARS
-    elif total < os.get_terminal_size()[0]:
-        bar_width = total + ENCLOSING_BAR_CHARS
+        bar_width = UNITS_PER_DAY + ENCLOSING_BAR_CHARS + len(suffix)
     else:
+        bar_width = total + ENCLOSING_BAR_CHARS + len(suffix)
+
+    # Cap the width at the terminal size
+    if bar_width > os.get_terminal_size()[0]:
         bar_width = os.get_terminal_size()[0]
 
     p_bar = progressbar.ProgressBar(widgets=widgets, max_value=10,
