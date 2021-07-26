@@ -57,7 +57,11 @@ def probar(expected, done, total):
 
 
 def get_expected_time(weekly=False):
-    """Calculate the expected amount of work that should be done."""
+    """
+    Calculate the expected amount of work that should be done.
+
+        This assumes that we are asking about the current day or week.
+    """
     now = dt.datetime.now(PHOENIX_TZ)
 
     start_of_day = dt.datetime(now.year, now.month, now.day, *START_OF_DAY)

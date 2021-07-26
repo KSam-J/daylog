@@ -93,7 +93,11 @@ def get_week_list(date_contained: dt.date) -> List[dt.date]:
 
 
 def get_week_blob(date_contained: dt.date):
-    """Place a week's worth of logs into a blob."""
+    """
+    Place a week's worth of logs into a blob.
+
+        TODO: Turn this into a generic "Create blob from date list"
+    """
     date_list = get_week_list(date_contained)
 
     week_blob = TimeBlob()
@@ -113,7 +117,11 @@ def get_week_blob(date_contained: dt.date):
 def weekly_report(date_contained: dt.date,
                   tag_sort: bool = False,
                   verbose: int = 0) -> None:
-    """Generate and display the weekly report."""
+    """
+    Generate and display the weekly report.
+
+        TODO: create a tag sort option and verbose option?
+    """
     def print_workday_total(blob: TimeBlob):
         full_days = int(blob.total_work_days)
         remainder = blob.blob_total - dt.timedelta(hours=(full_days * 8))
