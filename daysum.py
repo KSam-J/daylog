@@ -17,6 +17,8 @@ from util import beget_date, beget_filepath, error_handler
 DUMMY_DATE = (1986, 2, 21)
 TIME_ENTRY_RE = re.compile(r'(\d{1,2}):?(\d{1,2})?-(\d{1,2}):?(\d{1,2})?')
 
+TODAY = dt.date.today()
+
 
 def print_delta_line(hr1, min1, hr2, min2, delta):
     """Pretty print the time delta line."""
@@ -211,7 +213,6 @@ def daptiv_format(blob: TimeBlob,
 
 def driver():
     """Contain the arg parser and perform main functions."""
-    today = dt.date.today()
 
     parser = argparse.ArgumentParser(
         prog='daysum',
