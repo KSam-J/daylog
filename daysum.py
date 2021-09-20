@@ -218,7 +218,9 @@ def daptiv_format(blob: TimeBlob,
         for date in days_in_week:
             if date in tag_dates:
                 daily_blob = filtered_blob.sub_blob(date)
-                time_vector.append(f'{str(daily_blob.blob_total):>12}')
+                # Convert Time-Deltas to Daptiv decimal form
+                # Ex: 6:30:00 --> 6.5
+                time_vector.append(daily_blob.blob_total/dt.timedelta(hours=1))
             else:
                 time_vector.append('')
         vector_list.append(time_vector)
