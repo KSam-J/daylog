@@ -49,8 +49,13 @@ def probar(expected, done, total):
         bar_width = total + ENCLOSING_BAR_CHARS + len(suffix)
 
     # Cap the width at the terminal size
-    if bar_width > os.get_terminal_size()[0]:
-        bar_width = os.get_terminal_size()[0]
+    terminal_width = None
+    try:
+        terminal_width = os.get_terminal_size()[0]
+    except OSError:
+        terminal_width = 40
+
+    bar_width = terminal_width if bar_width > terminal_width else bar_width
 
     p_bar = progressbar.ProgressBar(widgets=widgets, max_value=10,
                                     term_width=bar_width,
