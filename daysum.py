@@ -5,17 +5,15 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import os
-import re
 from typing import List
 
 from tabulate import tabulate
 
 from probar import FIFTEEN_MINUTES, UNITS_PER_DAY, get_expected_time, probar
-from timeblob import TimeBlip, TimeBlob
-from util import beget_date, beget_filepath, error_handler
+from timeblob import TimeBlob
+from util import beget_filepath, error_handler
+from logfile import log_2_blob
 
-DUMMY_DATE = (1986, 2, 21)
-TIME_ENTRY_RE = re.compile(r'(\d{1,2}):?(\d{1,2})?-(\d{1,2}):?(\d{1,2})?')
 
 TODAY = dt.date.today()
 
@@ -24,57 +22,6 @@ def print_delta_line(hr1, min1, hr2, min2, delta):
     """Pretty print the time delta line."""
     delta_value = f'\u0394{str(delta):>8}'
     print(f'{hr1:02}:{min1:02}-{hr2:02}:{min2:02}{delta_value:>23}')
-
-
-def log_2_blob(filename: str, date: dt.date | None = None) -> TimeBlob:
-    """Scan a log file and place the data in a TimeBlip."""
-    # Check existence of file
-    blob = None
-    if not os.path.isfile(filename):
-        error_handler(f'File: "{filename}" does not exist.')
-
-    # Determine the date corresponding to filename
-    if not date:
-        date = beget_date(filename)
-        # second date check required until beget_date has back compat check
-        if not date:
-            date = dt.date(*DUMMY_DATE)
-
-    # Begin transfering text info to TimeBlob data stucture
-    with open(filename, 'r') as log:
-        blob = TimeBlob()
-        purgatory_blip = None
-
-        for line in log:
-            hour_search = re.match(TIME_ENTRY_RE, line)
-
-            # On lines stating time deltas
-            if hour_search:
-                # Grab start time
-                hour1 = int(hour_search.group(1))
-                min1 = 0
-                if hour_search.group(2):
-                    min1 = int(hour_search.group(2))
-                start_time = dt.datetime.combine(date, dt.time(hour1, min1))
-                # Grab end time
-                hour2 = int(hour_search.group(3))
-                min2 = 0
-                if hour_search.group(4) is not None:
-                    min2 = int(hour_search.group(4))
-                end_time = dt.datetime.combine(date, dt.time(hour2, min2))
-
-                purgatory_blip = TimeBlip(start_time, end_time)
-
-            else:  # Description lines
-                if isinstance(purgatory_blip, TimeBlip):
-                    purgatory_blip.desc = line.strip()
-                    purgatory_blip.set_tag(TimeBlip.strip_tag(line.strip()))
-
-                    # Add the Blip to the Blob
-                    blob.add_blip(purgatory_blip)
-                    # Reset the purgatory_blip for the next delta,desc pair
-                    purgatory_blip = None
-    return blob
 
 
 def get_week_list(date_contained: dt.date) -> List[dt.date]:
