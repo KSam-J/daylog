@@ -130,14 +130,7 @@ def daptiv_format(blob: TimeBlob,
     # Segregate blobs by tag and filter the descriptions
 
     # Apply tag groups
-    singelton_tags = list(blob.tag_set.copy())
-    # Strip tags in groups from singelton list
-    for group in groups:
-        for tag in group:
-            singelton_tags.remove(tag)
-    # Merge singelton and grouped tags for printing structure
-    tag_groups = [[tag] for tag in singelton_tags] + groups
-    tag_groups = sorted(tag_groups)
+    tag_groups = apply_tag_groups(list(blob.tag_set.copy()), groups)
 
     for tag_list in tag_groups:
         # Print the descriptions, w/o repeated tag
@@ -153,6 +146,7 @@ def daptiv_format(blob: TimeBlob,
         # Print the descriptions
         for desc in desc_set:
             print(desc)
+
         # Organize the dates in chronological order
         tag_dates = list(filtered_blob.date_set)
         tag_dates.sort()
@@ -173,6 +167,48 @@ def daptiv_format(blob: TimeBlob,
     # Print the tabulated table
     headers = get_table_header(list(blob.date_set))
     print(tabulate(vector_list, headers))
+
+
+def apply_tag_groups(singelton_tags: List[str],
+                     groups: List[List[str]]) -> List[List[str]]:
+    """Change a list of tags to a list of grouped tags."""
+    # Strip tags in groups from singelton list
+    for group in groups:  # groups can be None
+        for tag in group:
+            singelton_tags.remove(tag)
+    # Merge singelton and grouped tags for printing structure
+    tag_groups = [[tag] for tag in singelton_tags] + groups
+
+    return sorted(tag_groups)
+
+
+def tag_view(blob: TimeBlob, groups: List[List[str]] = None):
+    """Display the blob totals by tag."""
+    # Apply tag groups
+    tag_groups = apply_tag_groups(list(blob.tag_set.copy()), groups)
+
+    vector_list = list()
+    for tag_list in tag_groups:
+        filtered_blob = blob.filter_by(tag_list)
+
+        # Organize the dates in chronological order
+        tag_dates = list(filtered_blob.date_set)
+        tag_dates.sort()
+
+        # Create the time vector with the tag as the left-most (first) entry
+        row_vector = [tag_list[0]]
+        # Convert Time-Deltas to Daptiv decimal form
+        # Ex: 6:30:00 --> 6.5
+        row_vector.append(filtered_blob.blob_total/dt.timedelta(hours=1))
+
+        vector_list.append(row_vector)
+
+    # Print the tabulated table
+    dates = list(blob.date_set)
+    dates.sort()
+    headers = {'', f'{dates[0]} --> {dates[-1]}'}
+    print(tabulate(vector_list, headers))
+
 
 
 def driver():
@@ -258,6 +294,8 @@ def driver():
                     verbose=args.verbose)
     elif args.daptiv:
         daptiv_format(q_blob, group_list)
+    elif args.tag_sort:
+        tag_view(q_blob, group_list)
     else:
         # assert len(q_blob.date_set) == 1
         ex_time = get_expected_time() if d_in_q == TODAY else UNITS_PER_DAY
