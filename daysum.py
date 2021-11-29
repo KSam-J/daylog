@@ -62,9 +62,9 @@ def blobify_dates(date_list: List[dt.date]) -> TimeBlob:
     return blob
 
 
-def weekly_report(date_contained: dt.date,
-                  tag_sort: bool = False,
-                  verbose: int = 0) -> None:
+def report_view(blob: TimeBlob,
+                tag_sort: bool = False,
+                verbose: int = 0) -> None:
     """
     Generate and display the weekly report.
 
@@ -75,26 +75,23 @@ def weekly_report(date_contained: dt.date,
         remainder = blob.blob_total - dt.timedelta(hours=(full_days * 8))
         print(f'\nWeekly Total{full_days:>7} days {remainder}')
 
-    week_blob = get_week_blob(date_contained)
-    week_list = get_week_list(date_contained)
-
-    for day in week_list:
-        daily_total = week_blob.sub_blob(day).blob_total
+    for day in blob.date_set:
+        daily_total = blob.sub_blob(day).blob_total
         if daily_total > dt.timedelta(0):
             print(day.strftime('%a %b %d %Y'), end='')
             print(f'{"":10}{daily_total}')
 
-    print_workday_total(week_blob)
+    print_workday_total(blob)
 
-    expected_time = None
-    if TODAY in week_list:
-        expected_time = get_expected_time(weekly=True)
-    else:
-        expected_time = 40 * 4
+    expected_time = 0
+    if TODAY in blob.date_set:
+        expected_time = get_expected_time()
 
-    # Print the progressbar with weekly total
+    expected_time += 8 * 4 * len(blob.date_set)
+
+    # Print the progressbar with total
     probar(expected_time,
-           int(week_blob.blob_total.total_seconds() / FIFTEEN_MINUTES),
+           int(blob.blob_total.total_seconds() / FIFTEEN_MINUTES),
            40 * 4)
 
 

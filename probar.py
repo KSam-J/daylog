@@ -68,6 +68,7 @@ def get_expected_time(weekly=False):
     Calculate the expected amount of work that should be done.
 
         This assumes that we are asking about the current day or week.
+        TODO: change to (number_of_days, today_included=False)
     """
     now = dt.datetime.now(PHOENIX_TZ)
 
