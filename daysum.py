@@ -40,14 +40,15 @@ def get_week_list(date_contained: dt.date) -> List[dt.date]:
 
 
 def get_week_blob(date_contained: dt.date):
-    """
-    Place a week's worth of logs into a blob.
-
-        TODO: Turn this into a generic "Create blob from date list"
-    """
+    """Place a week's worth of logs into a blob."""
     date_list = get_week_list(date_contained)
 
-    week_blob = TimeBlob()
+    return blobify_dates(date_list)
+
+
+def blobify_dates(date_list: List[dt.date]) -> TimeBlob:
+    """Return a TimeBlob formed from the specified dates."""
+    blob = TimeBlob()
     # Place all dates in week into a single blob
     for date in date_list:
         file_path = beget_filepath(date)
@@ -56,9 +57,9 @@ def get_week_blob(date_contained: dt.date):
             continue
 
         daily_blob = log_2_blob(file_path, date)
-        week_blob = week_blob + daily_blob
+        blob = blob + daily_blob
 
-    return week_blob
+    return blob
 
 
 def weekly_report(date_contained: dt.date,
