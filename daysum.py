@@ -200,13 +200,19 @@ def driver():
                         help='count using the blob data format')
     parser.add_argument('-t', '--tag_sort', action='store_true',
                         help='display timedeltas organized by tag')
-    parser.add_argument('-w', '--week', action='store_true',
-                        help='display the weekly report')
+    parser.add_argument('-r', '--report', action='store_true',
+                        help='display in report format')
     parser.add_argument('-d', '--daptiv', action='store_true',
                         help='Display data in daptiv format')
     parser.add_argument('-g', '--group', action='append', default=None,
                         type=str,
                         help='enter tags to group together in weekly formats')
+    # Quantifiers
+    parser.add_argument('-w', '--week', action='store', nargs='?', const=1,
+                        type=int,
+                        help='quantifier in weeks')
+    parser.add_argument('-s', '--since', action='store_true',
+                        help='since <date provided> quantifier')
 
     args = parser.parse_args()
 
@@ -224,24 +230,39 @@ def driver():
 
     d_in_q = dt.date(*gen_args)  # date in question
 
+    # Handle quantifier options
+    # Create the Quantifier Blob
+    q_blob = TimeBlob()
+
+    if args.daptiv and not args.week:
+        args.week = 1
+
+    if args.week:
+        for week in range(0, args.week):
+            day_in_week = d_in_q - dt.timedelta(days=(week * 7))
+            q_blob += get_week_blob(day_in_week)
+    else:  # No quantifiers -> use day in question
+        q_blob = log_2_blob(beget_filepath(d_in_q))
+
+    # Handle specifier options
     # Determine the list of grouped tags
     group_list = list()
     if args.group:
         for g_str in args.group:
             group_list.append(g_str.split(sep=','))
 
-    if args.week:
-        weekly_report(d_in_q,
-                      tag_sort=args.tag_sort,
-                      verbose=args.verbose)
+    # Handle view options
+    if args.report:
+        report_view(q_blob,
+                    tag_sort=args.tag_sort,
+                    verbose=args.verbose)
     elif args.daptiv:
-        weekly_blob = get_week_blob(d_in_q)
-        daptiv_format(weekly_blob, group_list)
+        daptiv_format(q_blob, group_list)
     else:
-        blob = log_2_blob(beget_filepath(d_in_q))
+        # assert len(q_blob.date_set) == 1
         ex_time = get_expected_time() if d_in_q == TODAY else UNITS_PER_DAY
         probar(ex_time,
-               int(blob.blob_total.total_seconds() / FIFTEEN_MINUTES),
+               int(q_blob.blob_total.total_seconds() / FIFTEEN_MINUTES),
                UNITS_PER_DAY)
 
 
