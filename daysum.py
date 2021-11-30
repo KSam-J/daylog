@@ -75,7 +75,7 @@ def report_view(blob: TimeBlob,
         remainder = blob.blob_total - dt.timedelta(hours=(full_days * 8))
         print(f'\nWeekly Total{full_days:>7} days {remainder}')
 
-    for day in blob.date_set:
+    for day in sorted(blob.date_set):
         daily_total = blob.sub_blob(day).blob_total
         if daily_total > dt.timedelta(0):
             print(day.strftime('%a %b %d %Y'), end='')
