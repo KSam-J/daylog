@@ -57,9 +57,31 @@ def blobify_dates(date_list: List[dt.date]) -> TimeBlob:
             continue
 
         daily_blob = log_2_blob(file_path, date)
-        blob = blob + daily_blob
+        blob += daily_blob
 
     return blob
+
+
+def print_probar(blob: TimeBlob):
+    """Print the progressbar for a given blob."""
+    # Determine time expected to be done
+    expected_time = 0
+    if TODAY in blob.date_set:
+        expected_time = get_expected_time()
+        expected_time += 8 * 4 * (len(blob.date_set) - 1)
+    else:
+        expected_time += 8 * 4 * len(blob.date_set)
+
+    # Determine time actually finished
+    done_time = int(blob.blob_total.total_seconds() / FIFTEEN_MINUTES)
+
+    # Determine total amount of time
+    total_time = UNITS_PER_DAY * len(blob.date_set)
+
+    # Print the progressbar with total
+    probar(expected_time,
+           done_time,
+           total_time)
 
 
 def report_view(blob: TimeBlob,
@@ -83,16 +105,8 @@ def report_view(blob: TimeBlob,
 
     print_workday_total(blob)
 
-    expected_time = 0
-    if TODAY in blob.date_set:
-        expected_time = get_expected_time()
-
-    expected_time += 8 * 4 * len(blob.date_set)
-
     # Print the progressbar with total
-    probar(expected_time,
-           int(blob.blob_total.total_seconds() / FIFTEEN_MINUTES),
-           40 * 4)
+    print_probar(blob)
 
 
 def daptiv_format(blob: TimeBlob,
@@ -297,11 +311,7 @@ def driver():
     elif args.tag_sort:
         tag_view(q_blob, group_list)
     else:
-        # assert len(q_blob.date_set) == 1
-        ex_time = get_expected_time() if d_in_q == TODAY else UNITS_PER_DAY
-        probar(ex_time,
-               int(q_blob.blob_total.total_seconds() / FIFTEEN_MINUTES),
-               UNITS_PER_DAY)
+        print_probar(q_blob)
 
 
 if __name__ == '__main__':

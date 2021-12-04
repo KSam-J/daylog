@@ -6,7 +6,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals, with_statement)
 
 import datetime as dt
-import os
+import shutil
 import sys
 
 import progressbar
@@ -43,6 +43,7 @@ def probar(expected, done, total):
 
     suffix = f'{done/4:5} hours'
     # Set bar_width
+    bar_width = 0
     if total < UNITS_PER_DAY:
         bar_width = UNITS_PER_DAY + ENCLOSING_BAR_CHARS + len(suffix)
     else:
@@ -51,7 +52,7 @@ def probar(expected, done, total):
     # Cap the width at the terminal size
     terminal_width = None
     try:
-        terminal_width = os.get_terminal_size()[0]
+        terminal_width = shutil.get_terminal_size()[0]
     except OSError:
         terminal_width = 40
 
