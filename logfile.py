@@ -5,12 +5,14 @@ from __future__ import annotations
 import datetime as dt
 import re
 import os
+# import decimal
 
 from timeblob import TimeBlip, TimeBlob
 from util import beget_date, error_handler
 
 DUMMY_DATE = (1986, 2, 21)
 TIME_ENTRY_RE = re.compile(r'(\d{1,2}):?(\d{1,2})?-(\d{1,2}):?(\d{1,2})?')
+TIME_BLOCK_RE = re.compile(r'^(\d{1,2})\.?(\d{1,2})?$')
 
 
 def log_2_blob(filename: str, date: dt.date | None = None) -> TimeBlob:
@@ -35,6 +37,7 @@ def log_2_blob(filename: str, date: dt.date | None = None) -> TimeBlob:
         for line in log:
             # Determine what type of info is on line
             hour_search = re.match(TIME_ENTRY_RE, line)
+            block_search = re.match(TIME_BLOCK_RE, line)
 
             # On lines stating time deltas
             if hour_search:
@@ -50,6 +53,18 @@ def log_2_blob(filename: str, date: dt.date | None = None) -> TimeBlob:
                 if hour_search.group(4) is not None:
                     min2 = int(hour_search.group(4))
                 end_time = dt.datetime.combine(date, dt.time(hour2, min2))
+
+                purgatory_blip = TimeBlip(start_time, end_time)
+            elif block_search:
+                # Grab hour value
+                hour_delta = int(block_search.group(1))
+                min_delta = 0
+                if block_search.group(2):
+                    min_delta = int(block_search.group(2))
+                start_time = dt.datetime.combine(date, dt.time(0, 0))
+                # Grab end time
+                end_time = dt.datetime.combine(
+                    date, dt.time(hour_delta, round(min_delta * 60)))
 
                 purgatory_blip = TimeBlip(start_time, end_time)
 
