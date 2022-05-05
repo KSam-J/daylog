@@ -19,8 +19,6 @@ def log_2_blob(filename: str, date: dt.date | None = None) -> TimeBlob:
     """Scan a log file and place the data in a TimeBlip."""
     # Check existence of file
     blob = None
-    if not os.path.isfile(filename):
-        error_handler(f'File: "{filename}" does not exist.')
 
     # Determine the date corresponding to filename
     if not date:

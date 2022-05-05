@@ -10,7 +10,7 @@ from typing import List
 from tabulate import tabulate
 
 from probar import FIFTEEN_MINUTES, UNITS_PER_DAY, get_expected_time, probar
-from timeblob import TimeBlob
+from timeblob import TimeBlob, TimeBlip
 from util import beget_filepath, error_handler
 from logfile import log_2_blob
 
@@ -282,7 +282,7 @@ def driver():
 
     # Handle quantifier options
     # Create the Quantifier Blob
-    q_blob = TimeBlob()
+    q_blob: TimeBlob = TimeBlob()
 
     if args.daptiv and not args.week:
         args.week = 1
@@ -292,7 +292,11 @@ def driver():
             day_in_week = d_in_q - dt.timedelta(days=(week * 7))
             q_blob += get_week_blob(day_in_week)
     else:  # No quantifiers -> use day in question
-        q_blob = log_2_blob(beget_filepath(d_in_q))
+        try:
+            q_blob = log_2_blob(beget_filepath(d_in_q))
+        except FileNotFoundError:
+            today = dt.datetime(TODAY.year, TODAY.month, TODAY.day, 0, 0)
+            q_blob = TimeBlob(blip_list=[TimeBlip(today, today)])
 
     # Handle specifier options
     # Determine the list of grouped tags
