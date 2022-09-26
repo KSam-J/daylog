@@ -258,8 +258,7 @@ def driver():
                         type=str,
                         help='enter tags to group together in weekly formats')
     # Quantifiers
-    parser.add_argument('-w', '--week', action='store', nargs='?', const=1,
-                        type=int,
+    parser.add_argument('-w', '--week', action='count', default=1,
                         help='quantifier in weeks')
     parser.add_argument('-s', '--since', action='store_true',
                         help='since <date provided> quantifier')
