@@ -132,7 +132,7 @@ def daptiv_format(blob: TimeBlob,
         # Print out the Weekly header
         for date in days_in_week:
             day = date.strftime('%A')
-            day += f'\n{str(date)}'
+            day += '\n' + date.strftime('%D')
             header_list.append(day)
 
         # Prepend an empty str to account for Y-axis labels
