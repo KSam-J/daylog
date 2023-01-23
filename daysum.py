@@ -46,6 +46,17 @@ def get_week_blob(date_contained: dt.date):
     return blobify_dates(date_list)
 
 
+def get_since_blob(since_date: dt.date):
+    """Generate a blob from all dates since the since_date."""
+    # Get the full list of dates between the since date and today
+    date_list: List[dt.date] = list()
+    # Use the proleptic Gregorian ordinal number as a range of days
+    for o_day in range(since_date.toordinal(), TODAY.toordinal()+1):
+        date_list.append(dt.datetime.fromordinal(o_day))
+
+    return blobify_dates(date_list)
+
+
 def blobify_dates(date_list: List[dt.date]) -> TimeBlob:
     """Return a TimeBlob formed from the specified dates."""
     blob = TimeBlob()
@@ -313,6 +324,8 @@ def driver():
         for week in range(0, args.week):
             day_in_week = d_in_q - dt.timedelta(days=(week * 7))
             q_blob += get_week_blob(day_in_week)
+    elif args.since:
+        q_blob = get_since_blob(d_in_q)
     else:  # No quantifiers -> use day in question
         try:
             q_blob = log_2_blob(beget_filepath(d_in_q))
