@@ -207,12 +207,15 @@ def daptiv_format(blob: TimeBlob,
 def apply_tag_groups(singelton_tags: List[str],
                      groups: List[List[str]] | None) -> List[List[str]]:
     """Change a list of tags to a list of grouped tags."""
-    # Strip tags in groups from singelton list
-    for group in groups:  # groups can be None
-        for tag in group:
-            singelton_tags.remove(tag)
-    # Merge singelton and grouped tags for printing structure
-    tag_groups = [[tag] for tag in singelton_tags] + groups
+    if groups:
+        # Strip tags in groups from singelton list
+        for group in groups:
+            for tag in group:
+                singelton_tags.remove(tag)
+        # Merge singelton and grouped tags for printing structure
+        tag_groups = [[tag] for tag in singelton_tags] + groups
+    else:
+        tag_groups = [[tag] for tag in singelton_tags]
 
     return sorted(tag_groups)
 
