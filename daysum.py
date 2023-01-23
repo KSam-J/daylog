@@ -7,7 +7,7 @@ import datetime as dt
 import os
 from typing import List
 
-from tabulate import tabulate
+from tabulate import tabulate, SEPARATING_LINE
 
 from probar import FIFTEEN_MINUTES, UNITS_PER_DAY, get_expected_time, probar
 from timeblob import TimeBlob, TimeBlip
@@ -177,6 +177,25 @@ def daptiv_format(blob: TimeBlob,
             else:
                 time_vector.append('')
         vector_list.append(time_vector)
+
+    # Add totals at the bottom of the table
+    # Insert blank spacing row
+    vector_list.append(SEPARATING_LINE)
+    # Organize the dates in chronological order
+    blob_dates = list(blob.date_set)
+    blob_dates.sort()
+    time_vector = [f'Σ: {str(blob.blob_total/dt.timedelta(hours=1))}']
+    days_in_week: List[dt.date] = get_week_list(blob_dates[0])
+    for date in days_in_week:
+        if date in blob_dates:
+            daily_blob = blob.sub_blob(date)
+            # Convert Time-Deltas to Daptiv decimal form
+            # Ex: 6:30:00 --> 6.5
+            time_vector.append(
+                str(daily_blob.blob_total/dt.timedelta(hours=1)))
+        else:
+            time_vector.append('0.0')
+    vector_list.append(time_vector)
 
     # Print the tabulated table
     headers = get_table_header(list(blob.date_set))
