@@ -7,7 +7,7 @@ import re
 import os
 # import decimal
 
-from timeblob import TimeBlip, TimeBlob
+from blobs.timeblob import TimeBlip, TimeBlob
 from util import beget_date, error_handler
 
 DUMMY_DATE = (1986, 2, 21)
