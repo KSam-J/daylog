@@ -58,7 +58,7 @@ def log_2_blob(filename: str, date: dt.date | None = None) -> TimeBlob:
                 hour_delta = int(block_search.group(1))
                 min_delta = 0
                 if block_search.group(2):
-                    min_delta = int(block_search.group(2)) * 0.1
+                    min_delta = int(block_search.group(2)) * 0.01
                 start_time = dt.datetime.combine(date, dt.time(0, 0))
                 # Grab end time
                 end_time = dt.datetime.combine(
