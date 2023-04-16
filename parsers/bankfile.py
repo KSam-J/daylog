@@ -5,8 +5,9 @@ Companion/Contemporary to logfile.
 """
 import csv
 
-CSV_TYPES: dict[str, list] = {
-    "apple_fields": [
+
+class AppleCSV():
+    fields = [
         "Transaction Date",
         "Clearing Date",
         "Description",
@@ -15,15 +16,25 @@ CSV_TYPES: dict[str, list] = {
         "Type",
         "Amount (USD)",
         "Purchased By"
-        ],
-    "elan_fields": [
+    ]
+
+    def to_blip(self, bank_data: dict) -> BankBlip:
+        pass
+
+class ElanCSV():
+    fields = [
         "Date",
         "Transaction",
         "Name",
         "Memo",
         "Amount"
-        ],
-    "df_fields": [
+    ]
+
+    def to_blip(self, bank_data: dict) -> BankBlip:
+        pass
+
+class DesertFinCSV():
+    fields = [
         "Transaction ID",
         "Posting Date",
         "Effective Date",
@@ -37,6 +48,13 @@ CSV_TYPES: dict[str, list] = {
         "Balance",
         "Memo",
         "Extended Description"
+    ]
+
+    def to_blip(self, bank_data: dict) -> BankBlip:
+        pass
+
+CSV_TYPES: dict[str, list] = {
+    "df_fields": [
         ],
 }
 def bank_2_blob(filename: str) -> BankBlob:
@@ -60,8 +78,6 @@ def elan_2_blip(bank_data: dict) -> BankBlip:
     pass
 
 
-def apple_2_blip(bank_data: dict) -> BankBlip:
-    pass
 
 
 def df_2_blip(bank_data: dict) -> BankBlip:
