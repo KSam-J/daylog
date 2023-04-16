@@ -53,9 +53,10 @@ class DesertFinCSV():
     def to_blip(self, bank_data: dict) -> BankBlip:
         pass
 
-CSV_TYPES: dict[str, list] = {
-    "df_fields": [
-        ],
+CSV_TYPES: list[class] = {
+        AppleCSV,
+        DesertFinCSV,
+        ElanCSV
 }
 def bank_2_blob(filename: str) -> BankBlob:
     """Parse a bank file and place the data into bankblips."""

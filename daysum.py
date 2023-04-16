@@ -10,9 +10,9 @@ from typing import List
 from tabulate import tabulate
 
 from probar import FIFTEEN_MINUTES, UNITS_PER_DAY, get_expected_time, probar
-from timeblob import TimeBlob, TimeBlip
+from blobs.timeblob import TimeBlob, TimeBlip
 from util import beget_filepath, error_handler
-from logfile import log_2_blob
+from parsers.logfile import log_2_blob
 
 
 TODAY = dt.date.today()
