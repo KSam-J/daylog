@@ -1,7 +1,7 @@
 """Contain general use functions for daysum programs."""
 import datetime as dt
 import re
-from os import sys
+import sys
 
 # FILENAME = f'log'
 LOG_PATH = '/home/samkel/journal'
@@ -16,7 +16,7 @@ ISO_FMT_FILE = 'log{year:4}-{month:02}-{day:02}.txt'
 BACK_COMPAT_FILE = 'log{month:02}_{day:02}.txt'
 
 
-def error_handler(error_str: str = None, exception: Exception = None):
+def error_handler(error_str: str | None = None, exception: Exception | None = None):
     """Print error info to screen and exit the program."""
     # Determine what to print
     if error_str:
