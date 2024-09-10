@@ -9,7 +9,7 @@ import datetime as dt
 import shutil
 import sys
 
-import progressbar2
+import progressbar
 
 PHOENIX_TZ = dt.timezone(dt.timedelta(hours=-7), name='Phoenix')
 START_OF_DAY = [9, 30, 0, 0, PHOENIX_TZ]
