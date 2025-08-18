@@ -157,6 +157,16 @@ def daptiv_format(blob: TimeBlob,
     # Apply tag groups
     tag_groups = apply_tag_groups(list(blob.tag_set.copy()), groups)
 
+    # Organize tags in convenient daptiv-like order
+    # This effectively dictates the order that rows are printed in final table
+    # Make M+O First in list
+    for tg in tag_groups:
+        if "M+O" in tg:
+            temp_tg = tg
+            tag_groups.remove(tg)
+            tag_groups = [tg] + tag_groups
+
+
     # Build the table Row by Row
     for tag_list in tag_groups:
         # Print the descriptions, w/o repeated tag
