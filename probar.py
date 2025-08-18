@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """Print progressbars and other resources for progressbars."""
 # -*- coding: utf-8 -*-
 

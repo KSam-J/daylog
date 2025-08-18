@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.10
 """Read Time log and print summary on stdout."""
 from __future__ import annotations
 
