@@ -31,7 +31,7 @@ def probar(expected, done, total):
         '#\x1b[0m',                 # Behind
         ' '                   # Left
     ]
-    widgets = [progressbar2.MultiRangeBar("amounts", markers=markers)]
+    widgets = [progressbar.MultiRangeBar("amounts", markers=markers)]
 
     # Calculate amounts
     diff = abs(done - expected)
@@ -57,7 +57,7 @@ def probar(expected, done, total):
 
     bar_width = terminal_width if bar_width > terminal_width else bar_width
 
-    p_bar = progressbar2.ProgressBar(widgets=widgets, max_value=10,
+    p_bar = progressbar.ProgressBar(widgets=widgets, max_value=10,
                                     term_width=bar_width,
                                     suffix=suffix).start()
     p_bar.update(amounts=amounts, force=True)
