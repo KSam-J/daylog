@@ -7,7 +7,7 @@ import datetime as dt
 import os
 from typing import List
 
-from tabulate import tabulate, SEPARATING_LINE
+from tabulate import tabulate
 
 from probar import FIFTEEN_MINUTES, UNITS_PER_DAY, get_expected_time, probar
 from timeblob import TimeBlob, TimeBlip
@@ -193,7 +193,7 @@ def daptiv_format(blob: TimeBlob,
 
     # Add totals at the bottom of the table
     # Insert blank spacing row
-    vector_list.append(SEPARATING_LINE)
+    # vector_list.append(SEPARATING_LINE)
     # Organize the dates in chronological order
     blob_dates = list(blob.date_set)
     blob_dates.sort()
