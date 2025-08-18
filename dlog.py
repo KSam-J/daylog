@@ -9,9 +9,12 @@ from pathlib import Path
 from util import beget_filepath
 
 
-def edit_timesheet(filename: os.PathLike = None):
+def edit_timesheet(filename: os.PathLike):
     """Call vim and edit a log file."""
-    subprocess.run(['vim', filename], check=True)
+    try:
+        subprocess.run(['nvim', filename], check=True)
+    except(FileNotFoundError):
+        subprocess.run(['vim', filename], check=True)
 
 
 def driver():
