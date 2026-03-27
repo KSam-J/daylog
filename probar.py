@@ -40,7 +40,7 @@ def probar(expected, done, total):
     else:  # expected > done
         amounts = [done, 0, diff, (total - expected)]
 
-    suffix = f'{done/4:5} hours'
+    suffix = f'{done/4}'
     # Set bar_width
     bar_width = 0
     if total < UNITS_PER_DAY:
