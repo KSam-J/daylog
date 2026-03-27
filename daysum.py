@@ -121,7 +121,8 @@ def report_view(blob: TimeBlob,
 
 
 def daptiv_format(blob: TimeBlob,
-                  groups: List[List[str]] | None = None) -> None:
+                  groups: List[List[str]] | None = None,
+                  verbose: int = 0) -> None:
     """Display tdeltas and descriptions in a format for transfer to daptiv.
 
     Assume that the blob only contains dates from a single week (M-Sun).
@@ -173,19 +174,21 @@ def daptiv_format(blob: TimeBlob,
 
     # Build the table Row by Row
     for tag_list in tag_groups:
-        # Print the descriptions, w/o repeated tag
-        print("\nTag: ", tag_list[0], '----------------')
         filtered_blob = blob.filter_by(tag_list)
 
-        # Collect the descriptions
-        desc_set = set()
-        for blip in filtered_blob.blip_list:
-            # Only print if there is a detailed description
-            if len(blip.desc) > len(blip.tag)+1:
-                desc_set.add(blip.desc[len(blip.tag)+1:])
-        # Print the descriptions
-        for desc in desc_set:
-            print(desc)
+        # Collect and print the descriptions only if verbose is enabled
+        if verbose:
+            # Print the descriptions, w/o repeated tag
+            print("\nTag: ", tag_list[0], '----------------')
+
+            desc_set = set()
+            for blip in filtered_blob.blip_list:
+                # Only print if there is a detailed description
+                if len(blip.desc) > len(blip.tag)+1:
+                    desc_set.add(blip.desc[len(blip.tag)+1:])
+            # Print the descriptions
+            for desc in desc_set:
+                print(desc)
 
         # Organize the dates in chronological order
         tag_dates = list(filtered_blob.date_set)
@@ -369,7 +372,7 @@ def driver():
                     tag_sort=args.tag_sort,
                     verbose=args.verbose)
     elif args.daptiv:
-        daptiv_format(q_blob, group_list)
+        daptiv_format(q_blob, group_list, args.verbose)
     elif args.tag_sort:
         tag_view(q_blob, group_list)
     else:
