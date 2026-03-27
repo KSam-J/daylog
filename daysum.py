@@ -146,6 +146,9 @@ def daptiv_format(blob: TimeBlob,
             day += '\n' + date.strftime('%D')
             header_list.append(day)
 
+        # Append header for totals column
+        header_list.append('Total')
+
         # Prepend an empty str to account for Y-axis labels
         header_list = [''] + header_list
 
@@ -199,6 +202,8 @@ def daptiv_format(blob: TimeBlob,
                     str(daily_blob.blob_total/dt.timedelta(hours=1)))
             else:
                 time_vector.append('')
+        # Append the tag group total
+        time_vector.append(str(filtered_blob.blob_total/dt.timedelta(hours=1)))
         vector_list.append(time_vector)
 
     # Add totals at the bottom of the table
@@ -218,6 +223,8 @@ def daptiv_format(blob: TimeBlob,
                 str(daily_blob.blob_total/dt.timedelta(hours=1)))
         else:
             time_vector.append('0.0')
+    # Append the weekly grand total
+    time_vector.append(str(blob.blob_total/dt.timedelta(hours=1)))
     vector_list.append(time_vector)
 
     # Print the tabulated table
