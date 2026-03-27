@@ -146,7 +146,8 @@ def daptiv_format(blob: TimeBlob,
             day += '\n' + date.strftime('%D')
             header_list.append(day)
 
-        # Append header for totals column
+        # Append separator and totals column
+        header_list.append('')  # Separator column
         header_list.append('Total')
 
         # Prepend an empty str to account for Y-axis labels
@@ -202,13 +203,17 @@ def daptiv_format(blob: TimeBlob,
                     str(daily_blob.blob_total/dt.timedelta(hours=1)))
             else:
                 time_vector.append('')
-        # Append the tag group total
+        # Append the tag group total (with separator before it)
+        time_vector.append('|')  # Separator before last column
         time_vector.append(str(filtered_blob.blob_total/dt.timedelta(hours=1)))
         vector_list.append(time_vector)
 
+    # Add separator row above totals
+    SEPARATOR = '----------'
+    separator_row = [SEPARATOR] + [SEPARATOR] * 7 + ['|', SEPARATOR]
+    vector_list.append(separator_row)
+
     # Add totals at the bottom of the table
-    # Insert blank spacing row
-    # vector_list.append(SEPARATING_LINE)
     # Organize the dates in chronological order
     blob_dates = list(blob.date_set)
     blob_dates.sort()
@@ -223,7 +228,8 @@ def daptiv_format(blob: TimeBlob,
                 str(daily_blob.blob_total/dt.timedelta(hours=1)))
         else:
             time_vector.append('0.0')
-    # Append the weekly grand total
+    # Append the weekly grand total (with separator before it)
+    time_vector.append('|')  # Separator before last column
     time_vector.append(str(blob.blob_total/dt.timedelta(hours=1)))
     vector_list.append(time_vector)
 
