@@ -204,7 +204,7 @@ def daptiv_format(blob: TimeBlob,
                 # Ex: 6:30:00 --> 6.5
                 time_vector.append(
                     str(daily_blob.blob_total/dt.timedelta(hours=1)))
-            else:
+            elif date.weekday() <= 4:
                 time_vector.append('')
         # Append the tag group total (with separator before it)
         time_vector.append('|')  # Separator before last column
@@ -213,7 +213,7 @@ def daptiv_format(blob: TimeBlob,
 
     # Add separator row above totals
     SEPARATOR = '----------'
-    separator_row = [SEPARATOR] + [SEPARATOR] * 7 + ['|', SEPARATOR]
+    separator_row = [SEPARATOR] + [SEPARATOR] * 5 + ['|', SEPARATOR]
     vector_list.append(separator_row)
 
     # Add totals at the bottom of the table
@@ -229,7 +229,7 @@ def daptiv_format(blob: TimeBlob,
             # Ex: 6:30:00 --> 6.5
             time_vector.append(
                 str(daily_blob.blob_total/dt.timedelta(hours=1)))
-        else:
+        elif date.weekday() <= 4:
             time_vector.append('0.0')
     # Append the weekly grand total (with separator before it)
     time_vector.append('|')  # Separator before last column
@@ -238,6 +238,12 @@ def daptiv_format(blob: TimeBlob,
 
     # Print the tabulated table
     headers = get_table_header(list(blob.date_set))
+    headers.pop()
+    headers.pop()
+    headers.pop()
+    headers.pop()
+    headers.append('')
+    headers.append('Total')
     print(tabulate(vector_list, headers))
 
 
