@@ -127,123 +127,64 @@ def daptiv_format(blob: TimeBlob,
 
     Assume that the blob only contains dates from a single week (M-Sun).
     """
+    HOURS = dt.timedelta(hours=1)
 
-    def get_table_header(date_list: List[dt.date]) -> List[str]:
-        """Return a list with each table header for tabulate."""
-        # Check that all dates are in the same week
-        iso_week = None
-        for date in date_list:
-            _, week_num, _ = date.isocalendar()
-            if not iso_week:
-                iso_week = week_num
-            elif iso_week != week_num:
-                raise ValueError('Received dates from different iso-weeks')
+    def to_hours(td: dt.timedelta) -> str:
+        """Convert a timedelta to a decimal-hours string. Ex: 6:30:00 -> 6.5"""
+        return str(td / HOURS)
 
-        header_list = list()
-        days_in_week = get_week_list(date_list[0])
-        # Print out the Weekly header
-        for date in days_in_week:
-            day = date.strftime('%A')
-            day += '\n' + date.strftime('%D')
-            header_list.append(day)
+    def build_row(label: str, source_blob: TimeBlob, default: str = '') -> List:
+        """Build a tabulate row vector over the precomputed weekdays."""
+        vec = [label]
+        for date in weekdays:
+            if date in source_blob.date_set:
+                vec.append(to_hours(source_blob.sub_blob(date).blob_total))
+            else:
+                vec.append(default)
+        vec += ['|', to_hours(source_blob.blob_total)]
+        return vec
 
-        # Append separator and totals column
-        header_list.append('')  # Separator column
-        header_list.append('Total')
+    # Precompute Mon-Fri dates for this blob's week (omitting Sat/Sun)
+    blob_dates = sorted(blob.date_set)
+    weekdays = [d for d in get_week_list(blob_dates[0]) if d.weekday() <= 4]
 
-        # Prepend an empty str to account for Y-axis labels
-        header_list = [''] + header_list
+    # Build table headers directly from weekdays — no post-processing needed
+    headers = ([''] +
+               [d.strftime('%A') + '\n' + d.strftime('%D') for d in weekdays] +
+               ['', 'Total'])
 
-        return header_list
-
-    vector_list = list()
-    # Segregate blobs by tag and filter the descriptions
-
-    # Apply tag groups
+    # Apply tag groups and put M+O first
     tag_groups = apply_tag_groups(list(blob.tag_set.copy()), groups)
-
-    # Organize tags in convenient daptiv-like order
-    # This effectively dictates the order that rows are printed in final table
-    # Make M+O First in list
     for tg in tag_groups:
         if "M+O" in tg:
-            temp_tg = tg
             tag_groups.remove(tg)
             tag_groups = [tg] + tag_groups
+            break
 
+    vector_list = list()
 
-    # Build the table Row by Row
     for tag_list in tag_groups:
         filtered_blob = blob.filter_by(tag_list)
 
-        # Collect and print the descriptions only if verbose is enabled
         if verbose:
-            # Print the descriptions, w/o repeated tag
             print("\nTag: ", tag_list[0], '----------------')
-
-            desc_set = set()
-            for blip in filtered_blob.blip_list:
-                # Only print if there is a detailed description
-                if len(blip.desc) > len(blip.tag)+1:
-                    desc_set.add(blip.desc[len(blip.tag)+1:])
-            # Print the descriptions
+            desc_set = {
+                blip.desc[len(blip.tag)+1:]
+                for blip in filtered_blob.blip_list
+                if len(blip.desc) > len(blip.tag)+1
+            }
             for desc in desc_set:
                 print(desc)
 
-        # Organize the dates in chronological order
-        tag_dates = list(filtered_blob.date_set)
-        tag_dates.sort()
+        vector_list.append(build_row(tag_list[0], filtered_blob))
 
-        # Create the time vector with the tag as the left-most (first) entry
-        time_vector = [tag_list[0]]
-        days_in_week: List[dt.date] = get_week_list(tag_dates[0])
-        for date in days_in_week:
-            if date in tag_dates:
-                daily_blob = filtered_blob.sub_blob(date)
-                # Convert Time-Deltas to Daptiv decimal form
-                # Ex: 6:30:00 --> 6.5
-                time_vector.append(
-                    str(daily_blob.blob_total/dt.timedelta(hours=1)))
-            elif date.weekday() <= 4:
-                time_vector.append('')
-        # Append the tag group total (with separator before it)
-        time_vector.append('|')  # Separator before last column
-        time_vector.append(str(filtered_blob.blob_total/dt.timedelta(hours=1)))
-        vector_list.append(time_vector)
-
-    # Add separator row above totals
+    # Separator row — length tracks weekdays dynamically
     SEPARATOR = '----------'
-    separator_row = [SEPARATOR] + [SEPARATOR] * 5 + ['|', SEPARATOR]
-    vector_list.append(separator_row)
+    vector_list.append([SEPARATOR] + [SEPARATOR] * len(weekdays) + ['|', SEPARATOR])
 
-    # Add totals at the bottom of the table
-    # Organize the dates in chronological order
-    blob_dates = list(blob.date_set)
-    blob_dates.sort()
-    time_vector = [f'Σ: {str(blob.blob_total/dt.timedelta(hours=1))}']
-    days_in_week: List[dt.date] = get_week_list(blob_dates[0])
-    for date in days_in_week:
-        if date in blob_dates:
-            daily_blob = blob.sub_blob(date)
-            # Convert Time-Deltas to Daptiv decimal form
-            # Ex: 6:30:00 --> 6.5
-            time_vector.append(
-                str(daily_blob.blob_total/dt.timedelta(hours=1)))
-        elif date.weekday() <= 4:
-            time_vector.append('0.0')
-    # Append the weekly grand total (with separator before it)
-    time_vector.append('|')  # Separator before last column
-    time_vector.append(str(blob.blob_total/dt.timedelta(hours=1)))
-    vector_list.append(time_vector)
+    # Totals row — use '0.0' for weekdays with no logged time
+    vector_list.append(build_row(f'Σ: {to_hours(blob.blob_total)}', blob, default='0.0'))
 
-    # Print the tabulated table
-    headers = get_table_header(list(blob.date_set))
-    headers.pop()
-    headers.pop()
-    headers.pop()
-    headers.pop()
-    headers.append('')
-    headers.append('Total')
     print(tabulate(vector_list, headers))
 
 
