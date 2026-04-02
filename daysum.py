@@ -73,6 +73,17 @@ def blobify_dates(date_list: List[dt.date]) -> TimeBlob:
     return blob
 
 
+def compact_probar(blob: TimeBlob) -> str:
+    """Return an 8-char progress bar representing daily hours worked.
+
+    Each character is '#' if that hour is complete, ' ' if not.
+    Output is always exactly 8 characters.
+    """
+    done_units = int(blob.blob_total.total_seconds() / FIFTEEN_MINUTES)
+    done_hours = min(8, done_units // 4)
+    return '⣿' * done_hours + '⣀' * (8 - done_hours)
+
+
 def print_probar(blob: TimeBlob):
     """Print the progressbar for a given blob."""
     # Determine time expected to be done
@@ -264,6 +275,8 @@ def driver():
     parser.add_argument('-g', '--group', action='append', default=None,
                         type=str,
                         help='enter tags to group together in weekly formats')
+    parser.add_argument('-p', '--progress', action='store_true',
+                        help='display an 8-char progress bar (no borders)')
     # Quantifiers
     parser.add_argument('-w', '--week', action='count', default=0,
                         help='quantifier in weeks')
@@ -314,7 +327,9 @@ def driver():
             group_list.append(g_str.split(sep=','))
 
     # Handle view options
-    if args.report:
+    if args.progress:
+        print(compact_probar(q_blob))
+    elif args.report:
         report_view(q_blob,
                     tag_sort=args.tag_sort,
                     verbose=args.verbose)
