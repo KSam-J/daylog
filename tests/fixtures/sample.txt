@@ -1,0 +1,14 @@
+9-10
+M+O meeting with team
+10-11:30
+backend API refactor
+11:30-12
+code review
+1-2:30
+feature work on auth module
+1.5
+    SARIA writing unit tests
+16-17
+    DARUNIA documentation update
+0.5
+    RUTO
