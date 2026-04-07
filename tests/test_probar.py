@@ -9,6 +9,17 @@ from daysum import compact_probar
 from timeblob import TimeBlob, TimeBlip
 
 
+import re
+
+
+# Strip ANSI escape codes and tmux style tags for assertion-friendly comparisons
+_ANSI_RE = re.compile(r'\x1b\[[0-9;]*m')
+_TMUX_RE = re.compile(r'#\[[^\]]*\]')
+
+def strip_ansi(s: str) -> str:
+    return _TMUX_RE.sub('', _ANSI_RE.sub('', s))
+
+
 # ---------------------------------------------------------------------------
 # compact_probar
 # ---------------------------------------------------------------------------
@@ -25,27 +36,65 @@ def make_blob_with_hours(hours: float) -> TimeBlob:
 
 
 class TestCompactProbar:
-    def test_zero_hours(self):
-        result = compact_probar(make_blob_with_hours(0))
-        assert result == '⣀' * 8
+    def test_zero_hours_label(self):
+        result = strip_ansi(compact_probar(make_blob_with_hours(0)))
+        assert result == '0.00 hrs'
 
-    def test_four_hours(self):
-        result = compact_probar(make_blob_with_hours(4))
-        assert result == '⣿' * 4 + '⣀' * 4
+    def test_four_hours_label(self):
+        result = strip_ansi(compact_probar(make_blob_with_hours(4)))
+        assert result == '4.00 hrs'
 
-    def test_eight_hours(self):
-        result = compact_probar(make_blob_with_hours(8))
-        assert result == '⣿' * 8
+    def test_fractional_hours_label(self):
+        result = strip_ansi(compact_probar(make_blob_with_hours(4.5)))
+        assert result == '4.50 hrs'
+
+    def test_eight_hours_label(self):
+        result = strip_ansi(compact_probar(make_blob_with_hours(8)))
+        assert result == '8.00 hrs'
 
     def test_over_eight_hours_capped(self):
-        """More than 8h should still show full bar."""
-        result = compact_probar(make_blob_with_hours(9))
-        assert result == '⣿' * 8
+        result = strip_ansi(compact_probar(make_blob_with_hours(9)))
+        assert result == '8.00 hrs'
 
-    def test_always_eight_chars(self):
-        for h in [0, 1, 3, 5, 7, 8, 10]:
-            result = compact_probar(make_blob_with_hours(h))
-            assert len(result) == 8
+    def test_always_eight_visible_chars(self):
+        for h in [0, 1, 3, 4.5, 7.25, 8, 10]:
+            result = strip_ansi(compact_probar(make_blob_with_hours(h)))
+            assert len(result) == 8, f'Expected 8 visible chars at {h}h, got {len(result)}: {result!r}'
+
+    def test_ansi_mode_contains_escape_codes(self, monkeypatch):
+        monkeypatch.delenv('TMUX', raising=False)
+        result = compact_probar(make_blob_with_hours(4))
+        assert '\x1b[' in result
+
+    def test_ansi_mode_filled_chars_match_whole_hours(self, monkeypatch):
+        monkeypatch.delenv('TMUX', raising=False)
+        FILLED_SEQ = '\x1b[42m\x1b[97m'
+        for whole_h in range(0, 9):
+            result = compact_probar(make_blob_with_hours(whole_h))
+            filled_count = result.count(FILLED_SEQ)
+            assert filled_count == whole_h, f'At {whole_h}h: expected {whole_h} filled seqs, got {filled_count}'
+
+    def test_tmux_mode_uses_hash_bracket_syntax(self, monkeypatch):
+        monkeypatch.setenv('TMUX', '/tmp/tmux-1000/default,123,0')
+        result = compact_probar(make_blob_with_hours(4))
+        assert '#[' in result
+        assert '\x1b[' not in result
+
+    def test_tmux_mode_label_correct(self, monkeypatch):
+        monkeypatch.setenv('TMUX', '/tmp/tmux-1000/default,123,0')
+        import re
+        visible = re.sub(r'#\[[^\]]*\]', '', compact_probar(make_blob_with_hours(5.5)))
+        assert visible == '5.50 hrs'
+
+    def test_tmux_mode_custom_filled_colour(self, monkeypatch):
+        monkeypatch.setenv('TMUX', '/tmp/tmux-1000/default,123,0')
+        result = compact_probar(make_blob_with_hours(4), filled='blue')
+        assert 'bg=blue' in result
+
+    def test_tmux_mode_custom_empty_colour(self, monkeypatch):
+        monkeypatch.setenv('TMUX', '/tmp/tmux-1000/default,123,0')
+        result = compact_probar(make_blob_with_hours(4), empty='colour52')
+        assert 'bg=colour52' in result
 
 
 # ---------------------------------------------------------------------------

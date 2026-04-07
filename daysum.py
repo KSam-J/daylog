@@ -73,15 +73,47 @@ def blobify_dates(date_list: List[dt.date]) -> TimeBlob:
     return blob
 
 
-def compact_probar(blob: TimeBlob) -> str:
-    """Return an 8-char progress bar representing daily hours worked.
+def compact_probar(blob: TimeBlob,
+                   filled: str | None = None,
+                   empty: str | None = None) -> str:
+    """Return an 8-char highlighted string showing hours worked.
 
-    Each character is '#' if that hour is complete, ' ' if not.
-    Output is always exactly 8 characters.
+    The label 'X.XX hrs' (always 8 visible chars) is printed with each
+    character coloured by a filled or empty background, giving a progress
+    bar at 1-hour resolution with an exact decimal readout baked in.
+
+    Automatically uses tmux-native style strings when running inside tmux
+    (i.e. when $TMUX is set), falling back to ANSI escape codes otherwise.
+
+    Args:
+        filled: override the filled-zone colour. Tmux mode: any tmux colour
+                name (e.g. 'blue', 'colour214'). ANSI mode: an ANSI colour
+                code string (e.g. '\\x1b[44m').
+        empty:  override the empty-zone colour (same format as filled).
     """
+    import os
+    in_tmux = bool(os.environ.get('TMUX'))
+
+    if in_tmux:
+        filled_bg = filled or 'green'
+        empty_bg  = empty  or 'colour240'
+        FILLED = f'#[bg={filled_bg},fg=brightwhite,bold]'
+        EMPTY  = f'#[bg={empty_bg},fg=colour244,nobold]'
+        RESET  = '#[default]'
+    else:
+        FILLED = filled or '\x1b[42m\x1b[97m'   # green background, bright white text
+        EMPTY  = empty  or '\x1b[100m\x1b[90m'  # dark gray background, dim text
+        RESET  = '\x1b[0m'
+
     done_units = int(blob.blob_total.total_seconds() / FIFTEEN_MINUTES)
-    done_hours = min(8, done_units // 4)
-    return '⣿' * done_hours + '⣀' * (8 - done_hours)
+    hours = min(8.0, done_units / 4)
+    done_hours = int(hours)
+
+    label = f'{hours:.2f} hrs'   # always exactly 8 visible chars
+    result = ''
+    for i, ch in enumerate(label):
+        result += (FILLED if i < done_hours else EMPTY) + ch
+    return result + RESET
 
 
 def print_probar(blob: TimeBlob):
@@ -264,8 +296,6 @@ def driver():
                         help='show additional hourly info')
     parser.add_argument('-q', '--quiet', action='count', default=0,
                         help='only show total hours')
-    parser.add_argument('-x', '--experimental', action='store_true',
-                        help='count using the blob data format')
     parser.add_argument('-t', '--tag_sort', action='store_true',
                         help='display timedeltas organized by tag')
     parser.add_argument('-r', '--report', action='store_true',
@@ -275,8 +305,14 @@ def driver():
     parser.add_argument('-g', '--group', action='append', default=None,
                         type=str,
                         help='enter tags to group together in weekly formats')
-    parser.add_argument('-p', '--progress', action='store_true',
-                        help='display an 8-char progress bar (no borders)')
+    parser.add_argument('-x', '--tmux', action='store_true',
+                        help='display compact 8-char status bar for tmux/statuslines')
+    parser.add_argument('--filled', default=None, metavar='COLOUR',
+                        help='colour for the filled (done) zone of the tmux bar '
+                             '(tmux colour name or ANSI code)')
+    parser.add_argument('--empty', default=None, metavar='COLOUR',
+                        help='colour for the empty (remaining) zone of the tmux bar '
+                             '(tmux colour name or ANSI code)')
     # Quantifiers
     parser.add_argument('-w', '--week', action='count', default=0,
                         help='quantifier in weeks')
@@ -327,8 +363,8 @@ def driver():
             group_list.append(g_str.split(sep=','))
 
     # Handle view options
-    if args.progress:
-        print(compact_probar(q_blob))
+    if args.tmux:
+        print(compact_probar(q_blob, filled=args.filled, empty=args.empty))
     elif args.report:
         report_view(q_blob,
                     tag_sort=args.tag_sort,
