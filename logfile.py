@@ -11,7 +11,7 @@ from timeblob import TimeBlip, TimeBlob
 from util import beget_date, error_handler
 
 DUMMY_DATE = (1986, 2, 21)
-TIME_ENTRY_RE = re.compile(r'(\d{1,2}):?(\d{1,2})?-(\d{1,2}):?(\d{1,2})?')
+TIME_ENTRY_RE = re.compile(r'(\d{1,2}):?(\d{1,2})?-(\d{1,2})?:?(\d{1,2})?')
 TIME_BLOCK_RE = re.compile(r'^(\d{1,2})\.?(\d{1,2})?$')
 
 
@@ -45,12 +45,20 @@ def log_2_blob(filename: str, date: dt.date | None = None) -> TimeBlob:
                 if hour_search.group(2):
                     min1 = int(hour_search.group(2))
                 start_time = dt.datetime.combine(date, dt.time(hour1, min1))
-                # Grab end time
-                hour2 = int(hour_search.group(3))
-                min2 = 0
-                if hour_search.group(4) is not None:
-                    min2 = int(hour_search.group(4))
-                end_time = dt.datetime.combine(date, dt.time(hour2, min2))
+                # Grab end time; if absent, use current time capped so the day total stays <= 8h
+                if hour_search.group(3) is not None:
+                    hour2 = int(hour_search.group(3))
+                    min2 = 0
+                    if hour_search.group(4) is not None:
+                        min2 = int(hour_search.group(4))
+                    end_time = dt.datetime.combine(date, dt.time(hour2, min2))
+                else:
+                    remaining = dt.timedelta(hours=8) - blob.blob_total
+                    if remaining < dt.timedelta(0):
+                        remaining = dt.timedelta(0)
+                    max_end = start_time + remaining
+                    now = dt.datetime.now()
+                    end_time = min(now, max_end)
 
                 purgatory_blip = TimeBlip(start_time, end_time)
             elif block_search:
