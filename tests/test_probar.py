@@ -68,7 +68,7 @@ class TestCompactProbar:
 
     def test_ansi_mode_filled_chars_match_whole_hours(self, monkeypatch):
         monkeypatch.delenv('TMUX', raising=False)
-        FILLED_SEQ = '\x1b[42m\x1b[97m'
+        FILLED_SEQ = '\x1b[42m\x1b[90m'
         for whole_h in range(0, 9):
             result = compact_probar(make_blob_with_hours(whole_h))
             filled_count = result.count(FILLED_SEQ)
@@ -90,11 +90,22 @@ class TestCompactProbar:
         monkeypatch.setenv('TMUX', '/tmp/tmux-1000/default,123,0')
         result = compact_probar(make_blob_with_hours(4), filled='blue')
         assert 'bg=blue' in result
+        # text in filled zone should be the empty colour (cross-colouring)
+        assert 'fg=colour240' in result
 
     def test_tmux_mode_custom_empty_colour(self, monkeypatch):
         monkeypatch.setenv('TMUX', '/tmp/tmux-1000/default,123,0')
         result = compact_probar(make_blob_with_hours(4), empty='colour52')
         assert 'bg=colour52' in result
+        # text in empty zone should be the filled colour (cross-colouring)
+        assert 'fg=green' in result
+
+    def test_tmux_mode_cross_colours_default(self, monkeypatch):
+        """Filled zone text = empty_bg; empty zone text = filled_bg."""
+        monkeypatch.setenv('TMUX', '/tmp/tmux-1000/default,123,0')
+        result = compact_probar(make_blob_with_hours(4))
+        assert '#[bg=green,fg=colour240' in result
+        assert '#[bg=colour240,fg=green' in result
 
 
 # ---------------------------------------------------------------------------

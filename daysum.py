@@ -97,12 +97,12 @@ def compact_probar(blob: TimeBlob,
     if in_tmux:
         filled_bg = filled or 'green'
         empty_bg  = empty  or 'colour240'
-        FILLED = f'#[bg={filled_bg},fg=brightwhite,bold]'
-        EMPTY  = f'#[bg={empty_bg},fg=colour244,nobold]'
+        FILLED = f'#[bg={filled_bg},fg={empty_bg},bold]'
+        EMPTY  = f'#[bg={empty_bg},fg={filled_bg},nobold]'
         RESET  = '#[default]'
     else:
-        FILLED = filled or '\x1b[42m\x1b[97m'   # green background, bright white text
-        EMPTY  = empty  or '\x1b[100m\x1b[90m'  # dark gray background, dim text
+        FILLED = filled or '\x1b[42m\x1b[90m'   # green bg, dark text
+        EMPTY  = empty  or '\x1b[100m\x1b[32m'  # dark bg, green text
         RESET  = '\x1b[0m'
 
     done_units = int(blob.blob_total.total_seconds() / FIFTEEN_MINUTES)
